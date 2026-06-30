@@ -1,0 +1,20 @@
+{
+  "name": "d2-compare-bot",
+  "version": "1.0.0",
+  "description": "Destiny 2 weapon comparison Discord bot",
+  "type": "module",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "nodemon src/bot.js",
+    "deploy": "node src/deploy-commands.js"
+  },
+  "dependencies": {
+    "csv-parse": "^5.5.6",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
