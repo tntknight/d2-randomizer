@@ -25,11 +25,13 @@ commandModules.forEach(mod => {
   client.commands.set(mod.data.name, mod);
 });
 
+// Start the HTTP server immediately so Railway's health check passes on boot
+startCallbackServer();
+
 // ── Ready ─────────────────────────────────────────────────────────────────────
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
   preloadManifest();
-  startCallbackServer();
 });
 
 // ── Interaction handler ───────────────────────────────────────────────────────
