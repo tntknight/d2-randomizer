@@ -107,7 +107,7 @@ async function fetchManifest() {
         }));
       }
 
-      if (def.itemType !== 2 || !def.displayProperties?.name || def.redacted) return;
+      if (def.itemType !== 3 || !def.displayProperties?.name || def.redacted) return;
       const category = BUCKET_TO_CATEGORY[def.inventory?.bucketTypeHash];
       if (!category) return;
 
