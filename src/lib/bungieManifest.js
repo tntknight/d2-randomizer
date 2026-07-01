@@ -1,4 +1,11 @@
 import { Readable } from 'stream';
+import { createRequire } from 'module';
+
+// stream-json@1 and stream-chain@2 are CJS — use createRequire from an ESM file
+const require = createRequire(import.meta.url);
+const { chain }        = require('stream-chain');
+const { parser }       = require('stream-json');
+const { streamObject } = require('stream-json/streamers/StreamObject');
 
 let weaponDefMap = null;
 let loadPromise  = null;
@@ -58,15 +65,6 @@ async function ensureManifest() {
 }
 
 async function fetchManifest() {
-  // Dynamic imports work for both CJS (stream-json) and ESM (stream-chain) packages
-  const { chain }       = await import('stream-chain');
-  const streamJsonMod   = await import('stream-json');
-  const streamObjectMod = await import('stream-json/streamers/StreamObject.js');
-
-  // Handle both named exports (ESM) and default exports (CJS interop)
-  const parser       = streamJsonMod.parser       ?? streamJsonMod.default?.parser;
-  const streamObject = streamObjectMod.streamObject ?? streamObjectMod.default?.streamObject;
-
   console.log('[Manifest] Fetching manifest paths...');
 
   const metaRes = await fetch('https://www.bungie.net/Platform/Destiny2/Manifest/', {
