@@ -26,6 +26,7 @@ export async function execute(interaction) {
     alreadyLinked
       ? `*Re-linking will replace your current account: **${currentName}***`
       : '*This link expires in 10 minutes.*',
+    '*If anything goes wrong or the page errors, just run `/link-account` again for a fresh link.*',
   ];
 
   await interaction.reply({ content: lines.join('\n'), ephemeral: true });
