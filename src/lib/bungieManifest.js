@@ -95,6 +95,18 @@ async function fetchManifest() {
     objectStream.on('data', ({ key: hash, value: def }) => {
       totalSeen++;
 
+      // Debug: log the first item so we can see the actual shape
+      if (totalSeen === 1) {
+        console.log('[Manifest DEBUG] First item sample:', JSON.stringify({
+          itemType:    def?.itemType,
+          typeofType:  typeof def?.itemType,
+          name:        def?.displayProperties?.name,
+          redacted:    def?.redacted,
+          bucketHash:  def?.inventory?.bucketTypeHash,
+          topLevelKeys: Object.keys(def || {}).slice(0, 8),
+        }));
+      }
+
       if (def.itemType !== 2 || !def.displayProperties?.name || def.redacted) return;
       const category = BUCKET_TO_CATEGORY[def.inventory?.bucketTypeHash];
       if (!category) return;
