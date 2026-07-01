@@ -1,9 +1,8 @@
-import https from 'https';
+import { Readable } from 'stream';
 import { createRequire } from 'module';
 
-// stream-json@1 and stream-chain@2 are CJS — use createRequire from an ESM file
+// stream-json@1 is CJS — use createRequire from an ESM file
 const require = createRequire(import.meta.url);
-const { chain }        = require('stream-chain');
 const { parser }       = require('stream-json');
 const { streamObject } = require('stream-json/streamers/StreamObject');
 
@@ -76,25 +75,27 @@ async function fetchManifest() {
   if (!itemPath) throw new Error('[Manifest] Could not resolve item definition path');
 
   console.log('[Manifest] Streaming item definitions...');
+  const itemRes = await fetch(`https://www.bungie.net${itemPath}`);
 
-  // Use https.get for a native Node.js Readable — works reliably with stream-json
-  const itemStream = await new Promise((resolve, reject) => {
-    https.get(`https://www.bungie.net${itemPath}`, resolve).on('error', reject);
-  });
+  // Convert Web ReadableStream → Node Readable, then pipe through stream-json
+  const nodeStream   = Readable.fromWeb(itemRes.body);
+  const parserStream = parser();
+  const objectStream = streamObject();
+
+  nodeStream.pipe(parserStream).pipe(objectStream);
 
   weaponDefMap = {};
+  let totalSeen = 0;
 
-  // Stream-parse so only one item is in memory at a time (~30MB peak vs ~500MB with JSON.parse)
   await new Promise((resolve, reject) => {
-    const pipeline = chain([
-      itemStream,
-      parser(),
-      streamObject(),
-    ]);
+    nodeStream.on('error',   reject);
+    parserStream.on('error', reject);
+    objectStream.on('error', reject);
 
-    pipeline.on('data', ({ key: hash, value: def }) => {
+    objectStream.on('data', ({ key: hash, value: def }) => {
+      totalSeen++;
+
       if (def.itemType !== 2 || !def.displayProperties?.name || def.redacted) return;
-
       const category = BUCKET_TO_CATEGORY[def.inventory?.bucketTypeHash];
       if (!category) return;
 
@@ -110,10 +111,11 @@ async function fetchManifest() {
       };
     });
 
-    pipeline.on('end', resolve);
-    pipeline.on('error', reject);
+    objectStream.on('end', () => {
+      console.log(`[Manifest] Scanned ${totalSeen} items, kept ${Object.keys(weaponDefMap).length} weapons.`);
+      resolve();
+    });
   });
 
-  console.log(`[Manifest] Loaded ${Object.keys(weaponDefMap).length} weapon definitions.`);
   return { weapons: weaponDefMap };
 }
