@@ -8,13 +8,15 @@
 import 'dotenv/config';
 import { REST, Routes } from 'discord.js';
 
-import * as addCmd     from './commands/add.js';
-import * as listCmd    from './commands/list.js';
-import * as loadoutCmd from './commands/loadout.js';
-import * as clearCmd   from './commands/clear.js';
-import * as dropCmd    from './commands/drop.js';
+import * as addCmd         from './commands/add.js';
+import * as listCmd        from './commands/list.js';
+import * as loadoutCmd     from './commands/loadout.js';
+import * as clearCmd       from './commands/clear.js';
+import * as dropCmd        from './commands/drop.js';
+import * as linkAccountCmd from './commands/linkAccount.js';
+import * as loadVaultCmd   from './commands/loadVault.js';
 
-const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd]
+const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd]
   .map(mod => mod.data.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);

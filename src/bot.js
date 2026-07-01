@@ -1,15 +1,21 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { preloadManifest } from './lib/bungieManifest.js';
+import { startCallbackServer } from './server/callbackServer.js';
 
 // ── Load commands ─────────────────────────────────────────────────────────────
-import * as addCmd     from './commands/add.js';
-import * as listCmd    from './commands/list.js';
-import * as loadoutCmd from './commands/loadout.js';
-import * as clearCmd   from './commands/clear.js';
-import * as dropCmd    from './commands/drop.js';
+import * as addCmd         from './commands/add.js';
+import * as listCmd        from './commands/list.js';
+import * as loadoutCmd     from './commands/loadout.js';
+import * as clearCmd       from './commands/clear.js';
+import * as dropCmd        from './commands/drop.js';
+import * as linkAccountCmd from './commands/linkAccount.js';
+import * as loadVaultCmd   from './commands/loadVault.js';
 
-const commandModules = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd];
+const commandModules = [
+  addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
+  linkAccountCmd, loadVaultCmd,
+];
 
 // ── Discord client ────────────────────────────────────────────────────────────
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -22,8 +28,8 @@ commandModules.forEach(mod => {
 // ── Ready ─────────────────────────────────────────────────────────────────────
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
-  // Start manifest download immediately so the first /compare-loadout is fast
   preloadManifest();
+  startCallbackServer();
 });
 
 // ── Interaction handler ───────────────────────────────────────────────────────
