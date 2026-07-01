@@ -1,11 +1,4 @@
 import { Readable } from 'stream';
-import { createRequire } from 'module';
-
-// stream-json and stream-chain are CommonJS packages
-const require = createRequire(import.meta.url);
-const { chain }        = require('stream-chain');
-const { parser }       = require('stream-json');
-const { streamObject } = require('stream-json/streamers/StreamObject');
 
 let weaponDefMap = null;
 let loadPromise  = null;
@@ -40,19 +33,12 @@ const SUBTYPE_TO_TYPE = {
   31: 'Sword',
 };
 
-/**
- * Returns the icon URL for a weapon hash, or null if unavailable.
- * Icons are stored inside weaponDefMap to avoid keeping a separate map.
- */
 export async function getIconUrl(hash) {
   if (!hash) return null;
   const { weapons } = await ensureManifest();
   return weapons?.[String(hash)]?.iconUrl ?? null;
 }
 
-/**
- * Returns a lean weapon definition for the given item hash, or null if not a weapon.
- */
 export async function getWeaponDef(hash) {
   if (!hash) return null;
   const { weapons } = await ensureManifest();
@@ -72,6 +58,15 @@ async function ensureManifest() {
 }
 
 async function fetchManifest() {
+  // Dynamic imports work for both CJS (stream-json) and ESM (stream-chain) packages
+  const { chain }       = await import('stream-chain');
+  const streamJsonMod   = await import('stream-json');
+  const streamObjectMod = await import('stream-json/streamers/StreamObject.js');
+
+  // Handle both named exports (ESM) and default exports (CJS interop)
+  const parser       = streamJsonMod.parser       ?? streamJsonMod.default?.parser;
+  const streamObject = streamObjectMod.streamObject ?? streamObjectMod.default?.streamObject;
+
   console.log('[Manifest] Fetching manifest paths...');
 
   const metaRes = await fetch('https://www.bungie.net/Platform/Destiny2/Manifest/', {
@@ -87,8 +82,7 @@ async function fetchManifest() {
 
   weaponDefMap = {};
 
-  // Stream-parse the JSON so only one item definition is in memory at a time.
-  // This keeps peak memory ~30MB instead of ~500MB from JSON.parse on the full file.
+  // Stream-parse so only one item is in memory at a time (~30MB peak vs ~500MB with JSON.parse)
   await new Promise((resolve, reject) => {
     const pipeline = chain([
       Readable.fromWeb(itemRes.body),
