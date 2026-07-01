@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import express from 'express';
 import { exchangeCode, getMemberships } from '../auth/bungieOAuth.js';
 import { saveTokens } from '../auth/tokenStore.js';
@@ -8,7 +9,7 @@ const app = express();
 const pendingLinks = new Map();
 
 export function addPendingLink(discordUserId) {
-  const state = crypto.randomUUID();
+  const state = randomUUID();
   pendingLinks.set(state, discordUserId);
   setTimeout(() => pendingLinks.delete(state), 10 * 60 * 1000);
   return state;

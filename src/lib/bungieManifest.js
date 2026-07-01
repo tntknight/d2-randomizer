@@ -1,4 +1,4 @@
-import { Readable } from 'stream';
+import https from 'https';
 import { createRequire } from 'module';
 
 // stream-json@1 and stream-chain@2 are CJS — use createRequire from an ESM file
@@ -76,14 +76,18 @@ async function fetchManifest() {
   if (!itemPath) throw new Error('[Manifest] Could not resolve item definition path');
 
   console.log('[Manifest] Streaming item definitions...');
-  const itemRes = await fetch(`https://www.bungie.net${itemPath}`);
+
+  // Use https.get for a native Node.js Readable — works reliably with stream-json
+  const itemStream = await new Promise((resolve, reject) => {
+    https.get(`https://www.bungie.net${itemPath}`, resolve).on('error', reject);
+  });
 
   weaponDefMap = {};
 
   // Stream-parse so only one item is in memory at a time (~30MB peak vs ~500MB with JSON.parse)
   await new Promise((resolve, reject) => {
     const pipeline = chain([
-      Readable.fromWeb(itemRes.body),
+      itemStream,
       parser(),
       streamObject(),
     ]);
