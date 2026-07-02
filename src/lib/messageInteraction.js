@@ -54,7 +54,8 @@ export class MessageInteraction {
         const i = m ? parseInt(m[1], 10) - 1 : 0;
         return attachments[i] ?? null;
       },
-      // compare-drop uses getString('filename'), compare-dimsearch uses getString('scope')
+      // compare-drop uses getString('filename'), compare-dimsearch uses getString('scope'),
+      // compare-add uses getString('player') — all read from the trailing text args
       getString(_name) {
         return args.length > 0 ? args.join(' ') : null;
       },

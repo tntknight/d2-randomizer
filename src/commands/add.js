@@ -12,7 +12,12 @@ export const data = new SlashCommandBuilder()
   .addAttachmentOption(o => o.setName('file5').setDescription('DIM CSV export'))
   .addAttachmentOption(o => o.setName('file6').setDescription('DIM CSV export'))
   .addAttachmentOption(o => o.setName('file7').setDescription('DIM CSV export'))
-  .addAttachmentOption(o => o.setName('file8').setDescription('DIM CSV export'));
+  .addAttachmentOption(o => o.setName('file8').setDescription('DIM CSV export'))
+  .addStringOption(o =>
+    o.setName('player')
+      .setDescription('Override the player name this file is credited to (default: you)')
+      .setRequired(false)
+  );
 
 export async function execute(interaction) {
   if (!interaction.guildId) {
@@ -25,6 +30,8 @@ export async function execute(interaction) {
     .map(name => interaction.options.getAttachment(name))
     .filter(Boolean);
 
+  const uploadedBy = interaction.options.getString('player')?.trim() || interaction.user.username;
+
   const session = sessionStore.getOrCreate(interaction.guildId);
   const added = [];
   const skipped = [];
@@ -36,9 +43,9 @@ export async function execute(interaction) {
       continue;
     }
 
-    // Same user uploading the same filename again — skip it
-    if (session.files.some(f => f.filename === attachment.name && f.uploadedBy === interaction.user.username)) {
-      skipped.push(`${attachment.name} (you already loaded this file)`);
+    // Same player uploading the same filename again — skip it
+    if (session.files.some(f => f.filename === attachment.name && f.uploadedBy === uploadedBy)) {
+      skipped.push(`${attachment.name} (${uploadedBy} already loaded this file)`);
       continue;
     }
 
@@ -51,15 +58,15 @@ export async function execute(interaction) {
         continue;
       }
 
-      // If another player already uploaded a file with this name, tag it with the uploader's name
+      // If another player already uploaded a file with this name, tag it with the player name
       const displayName = session.files.some(f => f.filename === attachment.name)
-        ? `${attachment.name} (${interaction.user.username})`
+        ? `${attachment.name} (${uploadedBy})`
         : attachment.name;
 
       session.files.push({
         filename:   displayName,
         weapons,
-        uploadedBy: interaction.user.username,
+        uploadedBy,
       });
       session.matchData   = null;
       session.lastLoadout = null;
