@@ -1,6 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { getTokens } from '../auth/tokenStore.js';
-import { getCharacterIds, getLatestPvpActivity, getPGCR } from './bungieActivity.js';
+import { getCharacterIds, getLatestActivity, getPGCR } from './bungieActivity.js';
 import { buildMatchData } from './comparator.js';
 import { pickLoadout } from './loadoutPicker.js';
 import { getIconUrl } from './bungieManifest.js';
@@ -21,6 +21,21 @@ const MODE_NAMES = {
   48: 'Showdown',
   59: 'Momentum Control',
   84: 'Trials of Osiris',
+  // Private match modes
+  32: 'Private Match',
+  33: 'Private Match — Clash',
+  34: 'Private Match — Control',
+  35: 'Private Match — Clash',
+  36: 'Private Match — Supremacy',
+  37: 'Private Match — Survival',
+  38: 'Private Match — Countdown',
+  39: 'Private Match — Showdown',
+  40: 'Private Match — Lockdown',
+  41: 'Private Match — Scorched',
+  42: 'Private Match — Scorched Team',
+  43: 'Private Match — Breakthrough',
+  44: 'Private Match — Doubles',
+  45: 'Private Match — Zero Hour',
 };
 
 const SLOT_COLORS = {
@@ -46,7 +61,7 @@ export async function startWatching(userId, channel, guildId) {
   // Snapshot the latest activity ID on every character so we only react to NEW matches
   const seenIds = new Set();
   for (const charId of characterIds) {
-    const act = await getLatestPvpActivity(membershipType, membershipId, charId);
+    const act = await getLatestActivity(membershipType, membershipId, charId);
     if (act) seenIds.add(act.activityDetails.instanceId);
   }
 
@@ -98,8 +113,8 @@ async function poll(state) {
 
   // Check every character for a new activity (can't break early — user may play on any char)
   for (const charId of state.characterIds) {
-    const act = await getLatestPvpActivity(state.membershipType, state.membershipId, charId);
-    console.log(`[Watcher DEBUG] char=${charId} act=${act ? act.activityDetails.instanceId : 'null'} seenIds=[${[...state.seenIds].join(',')}]`);
+    const act = await getLatestActivity(state.membershipType, state.membershipId, charId);
+    console.log(`[Watcher DEBUG] char=${charId} act=${act ? act.activityDetails.instanceId : 'null'} mode=${act?.activityDetails?.mode ?? 'n/a'}`);
     if (!act) continue;
 
     const instanceId = act.activityDetails.instanceId;
@@ -125,9 +140,16 @@ async function poll(state) {
 
 async function postMatchResult(pgcr, state) {
   const { channel, guildId, membershipId, displayName } = state;
+  const teams = pgcr.teams ?? [];
+
+  // Skip PvE activities (Strikes, Raids, etc.) — they have no teams
+  if (teams.length === 0 && !MODE_NAMES[pgcr.activityDetails?.mode]) {
+    console.log(`[Watcher] Skipping non-PvP activity (mode=${pgcr.activityDetails?.mode})`);
+    return;
+  }
+
   const mode    = MODE_NAMES[pgcr.activityDetails?.mode] ?? 'PvP';
   const entries = pgcr.entries ?? [];
-  const teams   = pgcr.teams  ?? [];
   const isFFA   = teams.length === 0;
 
   const winningTeamId = teams.find(t => t.standing?.basic?.value === 0)?.teamId ?? null;

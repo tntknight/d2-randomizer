@@ -9,10 +9,12 @@ export async function getCharacterIds(membershipType, membershipId) {
   return Object.keys(json.Response?.characters?.data ?? {});
 }
 
-// Returns the single most recent PvP activity object for one character, or null
-export async function getLatestPvpActivity(membershipType, membershipId, characterId) {
+// Returns the single most recent activity for one character (any mode), or null.
+// We use mode=0 (no filter) so private matches (mode 32) are included alongside
+// public PvP (mode 5). The caller filters non-PvP via the PGCR teams field.
+export async function getLatestActivity(membershipType, membershipId, characterId) {
   const res  = await fetch(
-    `${BASE}/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=5&count=1&page=0`,
+    `${BASE}/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=0&count=1&page=0`,
     { headers: apiHeaders() }
   );
   const json = await res.json();
@@ -21,7 +23,7 @@ export async function getLatestPvpActivity(membershipType, membershipId, charact
     return null;
   }
   const activities = json.Response?.activities;
-  console.log(`[Activity] char=${characterId} count=${activities?.length ?? 0}`);
+  console.log(`[Activity] char=${characterId} count=${activities?.length ?? 0} mode=${activities?.[0]?.activityDetails?.mode ?? 'n/a'}`);
   return activities?.[0] ?? null;
 }
 
