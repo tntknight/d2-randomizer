@@ -43,17 +43,21 @@ export async function startWatching(userId, channel, guildId) {
   const characterIds = await getCharacterIds(membershipType, membershipId);
   if (!characterIds.length) throw new Error('no-characters');
 
-  // Record the current latest match as a baseline so we only react to NEW matches
-  let lastInstanceId = null;
+  // Snapshot the latest activity ID on every character so we only react to NEW matches
+  const seenIds = new Set();
   for (const charId of characterIds) {
     const act = await getLatestPvpActivity(membershipType, membershipId, charId);
-    if (act) { lastInstanceId = act.activityDetails.instanceId; break; }
+    if (act) seenIds.add(act.activityDetails.instanceId);
   }
+
+  console.log(`[Watcher] Started for ${displayName} — ${characterIds.length} characters, ${seenIds.size} baseline activities`);
 
   const state = {
     userId, channel, guildId,
     membershipType, membershipId, displayName,
-    characterIds, lastInstanceId,
+    characterIds,
+    seenIds,          // Set of already-processed instance IDs
+    pendingId: null,  // instance ID found but PGCR not ready yet — retry next poll
     interval: null,
   };
 
@@ -80,17 +84,39 @@ export function isWatching(userId) {
 // ── Polling ───────────────────────────────────────────────────────────────────
 
 async function poll(state) {
+  // If a previous poll found a new match but the PGCR wasn't ready, retry it first
+  if (state.pendingId) {
+    console.log(`[Watcher] Retrying PGCR for ${state.pendingId}...`);
+    const pgcr = await getPGCR(state.pendingId);
+    if (pgcr) {
+      state.seenIds.add(state.pendingId);
+      state.pendingId = null;
+      await postMatchResult(pgcr, state);
+    }
+    return; // either posted or still pending — don't check for newer matches yet
+  }
+
+  // Check every character for a new activity (can't break early — user may play on any char)
   for (const charId of state.characterIds) {
     const act = await getLatestPvpActivity(state.membershipType, state.membershipId, charId);
     if (!act) continue;
 
     const instanceId = act.activityDetails.instanceId;
-    if (instanceId === state.lastInstanceId) break; // no new match yet
+    if (state.seenIds.has(instanceId)) continue; // already processed
 
-    state.lastInstanceId = instanceId;
+    console.log(`[Watcher] New activity ${instanceId} for ${state.displayName}`);
+
     const pgcr = await getPGCR(instanceId);
-    if (pgcr) await postMatchResult(pgcr, state);
-    break;
+    if (!pgcr) {
+      // PGCR not ready yet — hold the ID and retry next poll
+      console.log(`[Watcher] PGCR not ready for ${instanceId}, will retry`);
+      state.pendingId = instanceId;
+      return;
+    }
+
+    state.seenIds.add(instanceId);
+    await postMatchResult(pgcr, state);
+    return; // one match per poll cycle
   }
 }
 
