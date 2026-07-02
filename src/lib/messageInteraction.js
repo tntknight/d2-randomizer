@@ -10,6 +10,7 @@ export class MessageInteraction {
     this.message   = message;
     this.args      = args;        // text tokens after the command name
     this.guildId   = message.guildId;
+    this.channel   = message.channel;
     this.user      = message.author; // has .id and .username, same as Interaction.user
     this._reply    = null;
     this.deferred  = false;

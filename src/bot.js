@@ -15,10 +15,13 @@ import * as dropCmd        from './commands/drop.js';
 import * as linkAccountCmd from './commands/linkAccount.js';
 import * as loadVaultCmd   from './commands/loadVault.js';
 import * as randomMapCmd   from './commands/randomMap.js';
+import * as pvpWatchCmd    from './commands/pvpWatch.js';
+import * as pvpStopCmd     from './commands/pvpStop.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
   linkAccountCmd, loadVaultCmd, randomMapCmd,
+  pvpWatchCmd, pvpStopCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
