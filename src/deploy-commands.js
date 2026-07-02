@@ -17,8 +17,9 @@ import * as clearCmd       from './commands/clear.js';
 import * as dropCmd        from './commands/drop.js';
 import * as linkAccountCmd from './commands/linkAccount.js';
 import * as loadVaultCmd   from './commands/loadVault.js';
+import * as randomMapCmd   from './commands/randomMap.js';
 
-const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd]
+const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd]
   .map(mod => mod.data.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);

@@ -14,10 +14,11 @@ import * as clearCmd       from './commands/clear.js';
 import * as dropCmd        from './commands/drop.js';
 import * as linkAccountCmd from './commands/linkAccount.js';
 import * as loadVaultCmd   from './commands/loadVault.js';
+import * as randomMapCmd   from './commands/randomMap.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
-  linkAccountCmd, loadVaultCmd,
+  linkAccountCmd, loadVaultCmd, randomMapCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
