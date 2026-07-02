@@ -99,6 +99,7 @@ async function poll(state) {
   // Check every character for a new activity (can't break early — user may play on any char)
   for (const charId of state.characterIds) {
     const act = await getLatestPvpActivity(state.membershipType, state.membershipId, charId);
+    console.log(`[Watcher DEBUG] char=${charId} act=${act ? act.activityDetails.instanceId : 'null'} seenIds=[${[...state.seenIds].join(',')}]`);
     if (!act) continue;
 
     const instanceId = act.activityDetails.instanceId;

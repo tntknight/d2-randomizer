@@ -16,8 +16,13 @@ export async function getLatestPvpActivity(membershipType, membershipId, charact
     { headers: apiHeaders() }
   );
   const json = await res.json();
-  if (json.ErrorCode !== 1) return null;
-  return json.Response?.activities?.[0] ?? null;
+  if (json.ErrorCode !== 1) {
+    console.log(`[Activity] ErrorCode=${json.ErrorCode} Message=${json.Message}`);
+    return null;
+  }
+  const activities = json.Response?.activities;
+  console.log(`[Activity] char=${characterId} count=${activities?.length ?? 0}`);
+  return activities?.[0] ?? null;
 }
 
 // Returns the full PGCR for a completed activity instance, or null
