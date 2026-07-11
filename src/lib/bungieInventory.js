@@ -86,12 +86,23 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
 
   console.log(`[Inventory] searching for hash=${itemHash} (${typeof itemHash})`);
   console.log(`[Inventory] vault items=${vaultItems.length}, charInv items=${allCharItems.length}, equipped=${allEquipped.length}`);
-  // Log hashes of anything that looks close (same first 4 digits) to catch type mismatches
-  const target = String(itemHash);
-  const nearby = [...vaultItems, ...allCharItems, ...allEquipped]
-    .filter(i => String(i.itemHash).startsWith(target.slice(0, 4)))
-    .map(i => `${i.itemHash}(${typeof i.itemHash})`);
-  if (nearby.length) console.log(`[Inventory] nearby hashes:`, nearby.join(', '));
+
+  const inVault    = vaultItems.find(i => i.itemHash === itemHash);
+  const inCharInv  = allCharItems.find(i => i.itemHash === itemHash);
+  const inEquipped = allEquipped.find(i => i.itemHash === itemHash);
+  console.log(`[Inventory] exact=== vault=${!!inVault} charInv=${!!inCharInv} equipped=${!!inEquipped}`);
+
+  // Also try loose equality to catch any string/number mismatch
+  const looseVault    = vaultItems.find(i => i.itemHash == itemHash);
+  const looseCharInv  = allCharItems.find(i => i.itemHash == itemHash);
+  const looseEquipped = allEquipped.find(i => i.itemHash == itemHash);
+  console.log(`[Inventory] loose==  vault=${!!looseVault} charInv=${!!looseCharInv} equipped=${!!looseEquipped}`);
+
+  // Sample the first vault item hash to verify type
+  if (vaultItems.length) {
+    const s = vaultItems[0];
+    console.log(`[Inventory] vault[0] itemHash=${s.itemHash} type=${typeof s.itemHash}`);
+  }
 
   const vaultMatch = vaultItems.find(i => i.itemHash === itemHash || i.itemHash === Number(itemHash));
 
