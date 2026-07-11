@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getExoticArmor } from '../lib/bungieManifest.js';
 import { getMostRecentCharacterClass } from '../lib/bungieActivity.js';
 import { getTokens } from '../auth/tokenStore.js';
@@ -60,7 +60,15 @@ export async function execute(interaction) {
 
   if (pick.iconUrl) embed.setThumbnail(pick.iconUrl);
 
-  await interaction.editReply({ embeds: [embed] });
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`pull_exotic:${pick.hash}`)
+      .setLabel('Pull to Inventory')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('⬇️')
+  );
+
+  await interaction.editReply({ embeds: [embed], components: [row] });
 }
 
 // Accepts slash choice values ('0','1','2') or plain text ('Titan','Hunter','Warlock')

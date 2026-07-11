@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { preloadManifest } from './lib/bungieManifest.js';
 import { startCallbackServer } from './server/callbackServer.js';
 import { MessageInteraction } from './lib/messageInteraction.js';
+import { pullExoticToInventory } from './lib/bungieInventory.js';
 
 const PREFIX = '!';
 
@@ -54,7 +55,39 @@ client.once('ready', () => {
   preloadManifest();
 });
 
-// ── Interaction handler ───────────────────────────────────────────────────────
+// ── Button handler ────────────────────────────────────────────────────────────
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isButton()) return;
+
+  if (interaction.customId.startsWith('pull_exotic:')) {
+    const itemHash = Number(interaction.customId.split(':')[1]);
+    await interaction.deferReply({ ephemeral: true });
+
+    const result = await pullExoticToInventory(interaction.user.id, itemHash).catch(err => ({
+      ok: false, reason: err.message,
+    }));
+
+    if (result.ok) {
+      const msg = {
+        'vault':        '✅ Pulled from your vault to your active character.',
+        'already-here': '✅ Already in your active character\'s inventory.',
+        'character':    '✅ Moved from another character to your active character.',
+      };
+      await interaction.editReply({ content: msg[result.location] ?? '✅ Done.' });
+    } else {
+      const msg = {
+        'not-owned':    "❌ You don't own this exotic.",
+        'only-equipped':"❌ This exotic is currently equipped — unequip it in-game first.",
+        'no-link':      '❌ Your Bungie account isn\'t linked. Run `/link-account` first.',
+        'refresh-failed':'❌ Your Bungie session expired. Run `/link-account` to re-link.',
+      };
+      await interaction.editReply({ content: msg[result.reason] ?? `❌ Transfer failed: ${result.reason}` });
+    }
+    return;
+  }
+});
+
+// ── Slash command handler ─────────────────────────────────────────────────────
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
