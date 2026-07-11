@@ -6,8 +6,9 @@ const require = createRequire(import.meta.url);
 const { parser }       = require('stream-json');
 const { streamObject } = require('stream-json/streamers/StreamObject');
 
-let weaponDefMap = null;
-let loadPromise  = null;
+let weaponDefMap    = null;
+let exoticArmorMap  = null; // { 0: [titan exotics], 1: [hunter exotics], 2: [warlock exotics] }
+let loadPromise     = null;
 
 const TIER_TO_RARITY = { 6: 'exotic', 5: 'legendary', 4: 'rare', 3: 'uncommon', 2: 'common', 1: 'basic' };
 
@@ -18,6 +19,14 @@ const BUCKET_TO_CATEGORY = {
 };
 
 const AMMO_TO_AMMO = { 1: 'primary', 2: 'special', 3: 'heavy' };
+
+const ARMOR_BUCKET_TO_SLOT = {
+  3448274439: 'Helmet',
+  3551918588: 'Arms',
+  14239492:   'Chest',
+  20886954:   'Legs',
+  1585787867: 'Class Item',
+};
 
 const SUBTYPE_TO_TYPE = {
   6:  'Auto Rifle',
@@ -49,6 +58,12 @@ export async function getWeaponDef(hash) {
   if (!hash) return null;
   const { weapons } = await ensureManifest();
   return weapons?.[String(hash)] ?? null;
+}
+
+// classType: 0=Titan, 1=Hunter, 2=Warlock
+export async function getExoticArmor(classType) {
+  await ensureManifest();
+  return exoticArmorMap?.[classType] ?? [];
 }
 
 export function preloadManifest() {
@@ -84,8 +99,9 @@ async function fetchManifest() {
 
   nodeStream.pipe(parserStream).pipe(objectStream);
 
-  weaponDefMap = {};
-  let totalSeen = 0;
+  weaponDefMap   = {};
+  exoticArmorMap = { 0: [], 1: [], 2: [] };
+  let totalSeen  = 0;
 
   await new Promise((resolve, reject) => {
     nodeStream.on('error',   reject);
@@ -94,37 +110,38 @@ async function fetchManifest() {
 
     objectStream.on('data', ({ key: hash, value: def }) => {
       totalSeen++;
-
-      // Debug: log the first item so we can see the actual shape
-      if (totalSeen === 1) {
-        console.log('[Manifest DEBUG] First item sample:', JSON.stringify({
-          itemType:    def?.itemType,
-          typeofType:  typeof def?.itemType,
-          name:        def?.displayProperties?.name,
-          redacted:    def?.redacted,
-          bucketHash:  def?.inventory?.bucketTypeHash,
-          topLevelKeys: Object.keys(def || {}).slice(0, 8),
-        }));
-      }
-
-      if (def.itemType !== 3 || !def.displayProperties?.name || def.redacted) return;
-      const category = BUCKET_TO_CATEGORY[def.inventory?.bucketTypeHash];
-      if (!category) return;
+      if (!def.displayProperties?.name || def.redacted) return;
 
       const icon = def.displayProperties?.icon;
-      weaponDefMap[hash] = {
-        name:     def.displayProperties.name,
-        hash,
-        rarity:   TIER_TO_RARITY[def.inventory?.tierType] ?? 'common',
-        type:     SUBTYPE_TO_TYPE[def.itemSubType] ?? 'Unknown',
-        category,
-        ammo:     AMMO_TO_AMMO[def.equippingBlock?.ammoType] ?? 'primary',
-        iconUrl:  icon ? `https://www.bungie.net${icon}` : null,
-      };
+      const iconUrl = icon ? `https://www.bungie.net${icon}` : null;
+
+      // Weapons — itemType 3
+      if (def.itemType === 3) {
+        const category = BUCKET_TO_CATEGORY[def.inventory?.bucketTypeHash];
+        if (!category) return;
+        weaponDefMap[hash] = {
+          name:     def.displayProperties.name,
+          hash,
+          rarity:   TIER_TO_RARITY[def.inventory?.tierType] ?? 'common',
+          type:     SUBTYPE_TO_TYPE[def.itemSubType] ?? 'Unknown',
+          category,
+          ammo:     AMMO_TO_AMMO[def.equippingBlock?.ammoType] ?? 'primary',
+          iconUrl,
+        };
+        return;
+      }
+
+      // Exotic armor — itemType 2, tierType 6 (exotic), class-specific (classType 0/1/2)
+      if (def.itemType === 2 && def.inventory?.tierType === 6 && def.classType < 3) {
+        const slot = ARMOR_BUCKET_TO_SLOT[def.inventory?.bucketTypeHash];
+        if (!slot) return;
+        exoticArmorMap[def.classType].push({ name: def.displayProperties.name, hash, slot, iconUrl });
+      }
     });
 
     objectStream.on('end', () => {
-      console.log(`[Manifest] Scanned ${totalSeen} items, kept ${Object.keys(weaponDefMap).length} weapons.`);
+      const armorCount = Object.values(exoticArmorMap).reduce((n, arr) => n + arr.length, 0);
+      console.log(`[Manifest] Scanned ${totalSeen} items, kept ${Object.keys(weaponDefMap).length} weapons, ${armorCount} exotic armor pieces.`);
       resolve();
     });
   });
