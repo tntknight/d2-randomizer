@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { pickLoadout } from '../lib/loadoutPicker.js';
 import { buildMatchData } from '../lib/comparator.js';
-import { getIconUrl } from '../lib/bungieManifest.js';
+import { getIconUrl, getWeaponDef } from '../lib/bungieManifest.js';
 import { buildDimSearch } from '../lib/dimSearch.js';
 import sessionStore from '../lib/sessionStore.js';
 
@@ -37,10 +37,11 @@ export async function execute(interaction) {
   session.lastLoadout = picks;
   sessionStore.touch(interaction.guildId);
 
-  // Fetch all icons in parallel
-  const icons = await Promise.all(
-    picks.map(p => getIconUrl(p.pick?.hash ?? null))
-  );
+  // Fetch icons and authoritative manifest defs in parallel
+  const [icons, defs] = await Promise.all([
+    Promise.all(picks.map(p => getIconUrl(p.pick?.hash ?? null))),
+    Promise.all(picks.map(p => getWeaponDef(p.pick?.hash ?? null))),
+  ]);
 
   // One embed per slot — each can have its own thumbnail for the weapon icon
   const embeds = picks.map(({ slot, pick }, i) => {
@@ -49,8 +50,10 @@ export async function execute(interaction) {
       .setTitle(slot.label);
 
     if (pick) {
+      // Use manifest type as authoritative source; fall back to stored type
+      const type = defs[i]?.type ?? pick.type;
       embed.setDescription(
-        `**${pick.name}**${pick.exotic ? '  ✦ EXOTIC' : ''}\n${pick.type}`
+        `**${pick.name}**${pick.exotic ? '  ✦ EXOTIC' : ''}\n${type}`
       );
       if (icons[i]) embed.setThumbnail(icons[i]);
     } else {

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { buildMatchData } from '../lib/comparator.js';
-import { getIconUrl } from '../lib/bungieManifest.js';
+import { getIconUrl, getWeaponDef } from '../lib/bungieManifest.js';
 import { buildDimSearch } from '../lib/dimSearch.js';
 import sessionStore from '../lib/sessionStore.js';
 import { SLOTS } from '../lib/loadoutPicker.js';
@@ -69,7 +69,11 @@ export async function execute(interaction) {
     }
   }
 
-  const icons = await Promise.all(picks.map(p => getIconUrl(p.pick?.hash ?? null)));
+  // Fetch icons and authoritative manifest defs in parallel
+  const [icons, defs] = await Promise.all([
+    Promise.all(picks.map(p => getIconUrl(p.pick?.hash ?? null))),
+    Promise.all(picks.map(p => getWeaponDef(p.pick?.hash ?? null))),
+  ]);
 
   const embeds = picks.map(({ slot, pick }, i) => {
     const embed = new EmbedBuilder()
@@ -77,7 +81,9 @@ export async function execute(interaction) {
       .setTitle(slot.label);
 
     if (pick) {
-      embed.setDescription(`**${pick.name}**${pick.exotic ? '  ✦ EXOTIC' : ''}\n${pick.type}`);
+      // Use manifest type as authoritative source; fall back to stored type
+      const type = defs[i]?.type ?? pick.type;
+      embed.setDescription(`**${pick.name}**${pick.exotic ? '  ✦ EXOTIC' : ''}\n${type}`);
       if (icons[i]) embed.setThumbnail(icons[i]);
     } else {
       embed.setDescription('_No weapons in this slot_');
