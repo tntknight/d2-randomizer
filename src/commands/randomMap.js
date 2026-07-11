@@ -2,7 +2,6 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 
 const MAPS = [
   'Altar of Flame',
-  'Asylum',
   'Bannerfall',
   'Bastion',
   'Blind Watch',
@@ -14,7 +13,6 @@ const MAPS = [
   'Dissonance',
   "Emperor's Respite",
   'Endless Vale',
-  'Equinox',
   'Eternity',
   'Eventide Labs',
   'Exodus Blue',
@@ -35,7 +33,6 @@ const MAPS = [
   'Radiant Cliffs',
   'Retribution',
   'Rusted Lands',
-  'Sector 618',
   'Shores of Time',
   'Skyline',
   'Skyshock',

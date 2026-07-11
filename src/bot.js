@@ -22,6 +22,13 @@ import * as srlWatchCmd    from './commands/srlWatch.js';
 import * as srlStopCmd     from './commands/srlStop.js';
 import * as randomExoticCmd  from './commands/randomExotic.js';
 import * as randomLoadoutCmd from './commands/randomLoadout.js';
+import * as chaosStartCmd     from './commands/chaosStart.js';
+import * as chaosBeginCmd     from './commands/chaosBegin.js';
+import * as chaosClassCmd     from './commands/chaosClass.js';
+import * as chaosRaidCmd      from './commands/chaosRaid.js';
+import * as chaosEncounterCmd from './commands/chaosEncounter.js';
+import * as chaosRolesCmd     from './commands/chaosRoles.js';
+import { handleChaosButton }  from './lib/chaosButtonHandler.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
@@ -29,6 +36,8 @@ const commandModules = [
   pvpWatchCmd, pvpStopCmd,
   srlWatchCmd, srlStopCmd,
   randomExoticCmd, randomLoadoutCmd,
+  chaosStartCmd, chaosBeginCmd, chaosClassCmd,
+  chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
@@ -59,6 +68,11 @@ client.once('ready', () => {
 // ── Button handler ────────────────────────────────────────────────────────────
 client.on('interactionCreate', async interaction => {
   if (!interaction.isButton()) return;
+
+  if (interaction.customId.startsWith('chaos:')) {
+    await handleChaosButton(interaction);
+    return;
+  }
 
   if (interaction.customId.startsWith('pull_exotic:')) {
     const itemHash = Number(interaction.customId.split(':')[1]);

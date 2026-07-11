@@ -24,8 +24,14 @@ import * as srlWatchCmd     from './commands/srlWatch.js';
 import * as srlStopCmd      from './commands/srlStop.js';
 import * as randomExoticCmd  from './commands/randomExotic.js';
 import * as randomLoadoutCmd from './commands/randomLoadout.js';
+import * as chaosStartCmd     from './commands/chaosStart.js';
+import * as chaosBeginCmd     from './commands/chaosBegin.js';
+import * as chaosClassCmd     from './commands/chaosClass.js';
+import * as chaosRaidCmd      from './commands/chaosRaid.js';
+import * as chaosEncounterCmd from './commands/chaosEncounter.js';
+import * as chaosRolesCmd     from './commands/chaosRoles.js';
 
-const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd]
+const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd]
   .map(mod => mod.data.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
