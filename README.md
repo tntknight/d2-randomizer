@@ -1,6 +1,6 @@
 # D2 Compare Bot
 
-A Discord bot that compares Destiny 2 weapon inventories across multiple players and rolls a random shared loadout from their overlapping weapons.
+A Discord bot for Destiny 2 groups. It compares weapon inventories across players to roll shared loadouts, and runs Chaos Raids — randomized raid sessions with random role assignments for each encounter.
 
 Players can either upload a [DIM](https://app.destinyitemmanager.com/) CSV export or link their Bungie account so the bot fetches their vault automatically.
 
@@ -8,16 +8,39 @@ Players can either upload a [DIM](https://app.destinyitemmanager.com/) CSV expor
 
 ## How it works
 
+### Weapon comparison
+
 1. Each player adds their weapons to the server pool (via CSV upload or Bungie vault sync)
 2. The bot finds every weapon owned by **all** players in the pool
 3. `/compare-loadout` picks a random weapon for each slot from that shared pool
 4. The result includes a DIM search string so you can quickly find the weapons in-game
+
+### Chaos Raids
+
+1. A player runs `/chaos-start` to open a lobby — up to 6 players can join by clicking the **Join** button
+2. The host presses **Begin** (or runs `/chaos-begin`) to close the lobby
+3. Each player chooses whether they want a randomly assigned class
+4. A random raid is rolled — the host can keep it or reroll up to 3 times
+5. Once confirmed, the bot shows the first encounter with a random role assigned to each player
+6. Players step through every encounter with **Next Encounter**; roles are reshuffled each time
+7. Every step is also available as a standalone command for groups that want to skip the full flow
 
 ---
 
 ## Commands
 
 All commands are available as both slash commands (`/command`) and prefix commands (`!command`). Prefix commands work immediately; slash commands can take up to an hour to appear in a new server.
+
+### Chaos Raids
+
+| Command | Description |
+|---|---|
+| `/chaos-start` | Open a Chaos Raid lobby (up to 6 players) |
+| `/chaos-begin` | Close the lobby and start class opt-in (host only) |
+| `/chaos-class choice:<Yes\|No>` | Record your random class preference |
+| `/chaos-raid` | Roll a random raid — works standalone or rerolls during a session |
+| `/chaos-encounter [number]` | Show an encounter with randomly assigned roles; jump to a specific encounter by number |
+| `/chaos-roles` | Reroll roles for the current encounter without advancing |
 
 ### Adding weapons
 
@@ -43,6 +66,27 @@ All commands are available as both slash commands (`/command`) and prefix comman
 | `/compare-drop` | Remove all files from the server pool |
 | `/compare-drop <filename>` | Remove a specific file from the pool |
 | `/compare-clear` | Clear all files and reset the session |
+
+### Random tools
+
+| Command | Description |
+|---|---|
+| `/random-loadout` | Roll a random weapon loadout (one guaranteed exotic) from the server pool |
+| `/random-exotic [class]` | Pick a random exotic armor piece — defaults to your most recently played class |
+| `/random-map` | Pick a random D2 PvP map |
+
+The **Pull to Inventory** button on `/random-exotic` results transfers the exotic from your vault or another character to your active character (requires a linked Bungie account).
+
+### PvP & SRL watching
+
+| Command | Description |
+|---|---|
+| `/pvp-watch` | Start watching for PvP match completions — posts a scoreboard and rolls a loadout after each match |
+| `/pvp-stop` | Stop watching for PvP matches |
+| `/srl-watch` | Start watching for Sparrow Racing League race completions — posts finish order and times |
+| `/srl-stop` | Stop watching for SRL races |
+
+The bot polls the Bungie API every 30 seconds. Private matches are included. Watching is per-user and stops automatically if you restart the bot.
 
 ---
 
@@ -98,7 +142,7 @@ In the [Bungie developer portal](https://www.bungie.net/en/Application):
 
 - **OAuth Client Type**: Confidential
 - **Redirect URL**: your public callback URL (must be HTTPS — use a hosting platform like Railway)
-- **Scope**: `ReadDestinyInventoryAndVault`
+- **Scopes**: `ReadDestinyInventoryAndVault` and `MoveEquipDestinyItems` (required for the Pull to Inventory button)
 
 ### Running locally
 
@@ -125,7 +169,7 @@ After deploying, run `npm run deploy` locally once to register the slash command
 
 ```
 src/
-  bot.js                  # Entry point — Discord client, command routing
+  bot.js                  # Entry point — Discord client, command routing, button dispatch
   deploy-commands.js      # One-off script to register slash commands with Discord
   commands/
     add.js                # /compare-add — upload DIM CSV
@@ -136,6 +180,19 @@ src/
     dimsearch.js          # /compare-dimsearch — export DIM search string
     linkAccount.js        # /link-account — start Bungie OAuth flow
     loadVault.js          # /load-vault — fetch vault from Bungie
+    randomMap.js          # /random-map — pick a random PvP map
+    randomExotic.js       # /random-exotic — pick a random exotic armor piece
+    randomLoadout.js      # /random-loadout — roll a loadout from the server pool
+    pvpWatch.js           # /pvp-watch — start watching for PvP match completions
+    pvpStop.js            # /pvp-stop — stop watching
+    srlWatch.js           # /srl-watch — start watching for SRL race completions
+    srlStop.js            # /srl-stop — stop watching
+    chaosStart.js         # /chaos-start — open a Chaos Raid lobby
+    chaosBegin.js         # /chaos-begin — close lobby and start class opt-in
+    chaosClass.js         # /chaos-class — record class preference
+    chaosRaid.js          # /chaos-raid — roll a random raid
+    chaosEncounter.js     # /chaos-encounter — show encounter with role assignments
+    chaosRoles.js         # /chaos-roles — reroll roles for current encounter
   lib/
     sessionStore.js       # In-memory per-server weapon pool
     csvParser.js          # Parses DIM CSV exports
@@ -144,7 +201,14 @@ src/
     dimSearch.js          # Builds DIM search strings from weapon lists
     bungieManifest.js     # Streams and caches the Bungie item manifest
     bungieVault.js        # Fetches vault + character inventories via Bungie API
+    bungieActivity.js     # Fetches activity history and most-recent character class
+    bungieInventory.js    # Transfers items from vault/characters to active character
+    matchWatcher.js       # Per-user PvP match polling (30 s interval)
+    raceWatcher.js        # Per-user SRL race polling (30 s interval)
     messageInteraction.js # Adapter so prefix commands reuse slash command logic
+    raidData.js           # All raids, encounters, and per-encounter role lists
+    chaosSession.js       # In-memory per-guild Chaos Raid session state (3-hr TTL)
+    chaosButtonHandler.js # Dispatches chaos: button interactions; shared embed builders
   auth/
     bungieOAuth.js        # OAuth URL builder, token exchange, token refresh
     tokenStore.js         # Persists Bungie tokens to data/tokens.json
