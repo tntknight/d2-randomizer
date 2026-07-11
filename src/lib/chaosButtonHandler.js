@@ -139,7 +139,7 @@ export function buildEncounterEmbed(session) {
 export function buildEncounterRow(guildId, isLast) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(isLast ? `chaos:finish:${guildId}` : `chaos:next-enc:${guildId}`)
+      .setCustomId(`chaos:next-enc:${guildId}`)
       .setLabel(isLast ? 'Finish Raid' : 'Next Encounter')
       .setStyle(isLast ? ButtonStyle.Danger : ButtonStyle.Primary),
     new ButtonBuilder()

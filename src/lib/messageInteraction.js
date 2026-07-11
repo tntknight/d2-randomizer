@@ -10,7 +10,9 @@ export class MessageInteraction {
     this.message   = message;
     this.args      = args;        // text tokens after the command name
     this.guildId   = message.guildId;
+    this.channelId = message.channelId;
     this.channel   = message.channel;
+    this.client    = message.client;
     this.user      = message.author; // has .id and .username, same as Interaction.user
     this._reply    = null;
     this.deferred  = false;
@@ -19,8 +21,8 @@ export class MessageInteraction {
 
   async reply(options) {
     if (typeof options === 'string') options = { content: options };
-    const { content, embeds, files } = options;
-    this._reply = await this.message.reply({ content, embeds, files });
+    const { content, embeds, files, components } = options;
+    this._reply = await this.message.reply({ content, embeds, files, components });
     this.replied = true;
     return this._reply;
   }
