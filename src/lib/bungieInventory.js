@@ -77,34 +77,12 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
   chars.sort((a, b) => new Date(b.dateLastPlayed) - new Date(a.dateLastPlayed));
   const targetCharId = chars[0].characterId;
 
-  // Debug: log what we're searching for and what the API returned
-  const vaultItems  = data.profileInventory?.data?.items ?? [];
-  const charInvData = data.characterInventories?.data ?? {};
+  const vaultItems   = data.profileInventory?.data?.items ?? [];
+  const charInvData  = data.characterInventories?.data ?? {};
   const equippedData = data.characterEquipment?.data ?? {};
-  const allCharItems = Object.values(charInvData).flatMap(c => c.items ?? []);
   const allEquipped  = Object.values(equippedData).flatMap(c => c.items ?? []);
 
-  console.log(`[Inventory] searching for hash=${itemHash} (${typeof itemHash})`);
-  console.log(`[Inventory] vault items=${vaultItems.length}, charInv items=${allCharItems.length}, equipped=${allEquipped.length}`);
-
-  const inVault    = vaultItems.find(i => i.itemHash === itemHash);
-  const inCharInv  = allCharItems.find(i => i.itemHash === itemHash);
-  const inEquipped = allEquipped.find(i => i.itemHash === itemHash);
-  console.log(`[Inventory] exact=== vault=${!!inVault} charInv=${!!inCharInv} equipped=${!!inEquipped}`);
-
-  // Also try loose equality to catch any string/number mismatch
-  const looseVault    = vaultItems.find(i => i.itemHash == itemHash);
-  const looseCharInv  = allCharItems.find(i => i.itemHash == itemHash);
-  const looseEquipped = allEquipped.find(i => i.itemHash == itemHash);
-  console.log(`[Inventory] loose==  vault=${!!looseVault} charInv=${!!looseCharInv} equipped=${!!looseEquipped}`);
-
-  // Sample the first vault item hash to verify type
-  if (vaultItems.length) {
-    const s = vaultItems[0];
-    console.log(`[Inventory] vault[0] itemHash=${s.itemHash} type=${typeof s.itemHash}`);
-  }
-
-  const vaultMatch = vaultItems.find(i => i.itemHash === itemHash || i.itemHash === Number(itemHash));
+  const vaultMatch = vaultItems.find(i => i.itemHash === itemHash);
 
   if (vaultMatch) {
     await bungiePost('/Destiny2/Actions/Items/TransferItem/', accessToken, {
@@ -120,7 +98,7 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
 
   // Search character inventories (unequipped bags)
   for (const [charId, inv] of Object.entries(charInvData)) {
-    const match = inv.items?.find(i => i.itemHash === itemHash || i.itemHash === Number(itemHash));
+    const match = inv.items?.find(i => i.itemHash === itemHash);
     if (!match) continue;
 
     if (charId === targetCharId) {
@@ -148,7 +126,7 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
   }
 
   // Check if it's only present as an equipped item (can't be moved without unequipping)
-  const isEquipped = allEquipped.some(i => i.itemHash === itemHash || i.itemHash === Number(itemHash));
+  const isEquipped = allEquipped.some(i => i.itemHash === itemHash);
 
   if (isEquipped) return { ok: false, reason: 'only-equipped' };
   return { ok: false, reason: 'not-owned' };

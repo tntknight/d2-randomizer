@@ -77,7 +77,7 @@ client.on('interactionCreate', async interaction => {
     } else {
       const msg = {
         'not-owned':    "❌ You don't own this exotic.",
-        'only-equipped':"❌ This exotic is currently equipped — unequip it in-game first.",
+        'only-equipped': "❌ This exotic is currently equipped on one of your characters. Unequip it in-game first, then try again.",
         'no-link':      '❌ Your Bungie account isn\'t linked. Run `/link-account` first.',
         'refresh-failed':'❌ Your Bungie session expired. Run `/link-account` to re-link.',
       };
