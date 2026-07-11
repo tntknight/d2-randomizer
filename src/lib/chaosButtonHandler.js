@@ -28,13 +28,14 @@ export async function handleChaosButton(interaction) {
 // ── Shared embed builders ────────────────────────────────────────────────────
 
 export function buildLobbyEmbed(session) {
-  const playerList = session.players.map(p => `<@${p.userId}>`).join('\n') || 'None yet';
+  const hostName   = session.players.find(p => p.userId === session.hostId)?.username ?? 'Unknown';
+  const playerList = session.players.map(p => p.username).join('\n') || 'None yet';
   return new EmbedBuilder()
     .setColor(0xc5a93e)
     .setTitle('Chaos Raid Lobby')
     .setDescription('A Chaos Raid is forming! Up to 6 players can join.')
     .addFields(
-      { name: `Host`, value: `<@${session.hostId}>`, inline: true },
+      { name: 'Host', value: hostName, inline: true },
       { name: `Players (${session.players.length}/6)`, value: playerList, inline: true },
     )
     .setFooter({ text: 'Press Join to enter — host presses Begin when ready' });
@@ -57,7 +58,7 @@ export function buildLobbyRow(guildId, disabled = false) {
 
 export function buildClassOptInEmbed(session) {
   const fields = session.players.map(p => ({
-    name: `<@${p.userId}>`,
+    name: p.username,
     value: p.wantsRandomClass === null ? 'Pending…'
          : p.wantsRandomClass ? 'Yes ✅'
          : 'No ❌',
@@ -87,7 +88,7 @@ export function buildClassOptInRow(guildId) {
 export function buildRaidRollEmbed(session) {
   const classLines = session.players.map(p => {
     const cls = p.assignedClass ? ` — ${p.assignedClass}` : '';
-    return `<@${p.userId}>${cls}`;
+    return `${p.username}${cls}`;
   }).join('\n');
 
   const rerollsLeft = chaosSession.MAX_REROLLS - session.rerollsUsed;
@@ -120,7 +121,7 @@ export function buildEncounterEmbed(session) {
 
   const shuffledRoles = shuffle(encounter.roles).slice(0, session.players.length);
   const roleFields = session.players.map((p, i) => ({
-    name: `<@${p.userId}>`,
+    name: p.username,
     value: shuffledRoles[i] ?? 'Support',
     inline: true,
   }));
@@ -163,7 +164,7 @@ async function handleJoin(interaction, guildId) {
   }
 
   // Synchronous push before any await to prevent race conditions
-  session.players.push({ userId: interaction.user.id, username: interaction.user.username, wantsRandomClass: null, assignedClass: null });
+  session.players.push({ userId: interaction.user.id, username: interaction.member?.displayName ?? interaction.user.username, wantsRandomClass: null, assignedClass: null });
   chaosSession.update(guildId, {});
 
   const full = session.players.length >= 6;

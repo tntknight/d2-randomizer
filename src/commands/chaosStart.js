@@ -20,7 +20,7 @@ export async function execute(interaction) {
   const session = chaosSession.create(guildId, interaction.user.id, interaction.channelId);
   session.players.push({
     userId:           interaction.user.id,
-    username:         interaction.user.username,
+    username:         interaction.member?.displayName ?? interaction.user.username,
     wantsRandomClass: null,
     assignedClass:    null,
   });
