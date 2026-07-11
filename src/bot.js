@@ -20,14 +20,15 @@ import * as pvpWatchCmd    from './commands/pvpWatch.js';
 import * as pvpStopCmd     from './commands/pvpStop.js';
 import * as srlWatchCmd    from './commands/srlWatch.js';
 import * as srlStopCmd     from './commands/srlStop.js';
-import * as randomExoticCmd from './commands/randomExotic.js';
+import * as randomExoticCmd  from './commands/randomExotic.js';
+import * as randomLoadoutCmd from './commands/randomLoadout.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
   linkAccountCmd, loadVaultCmd, randomMapCmd,
   pvpWatchCmd, pvpStopCmd,
   srlWatchCmd, srlStopCmd,
-  randomExoticCmd,
+  randomExoticCmd, randomLoadoutCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────

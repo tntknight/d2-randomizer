@@ -82,11 +82,15 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
   const equippedData = data.characterEquipment?.data ?? {};
   const allEquipped  = Object.values(equippedData).flatMap(c => c.items ?? []);
 
-  const vaultMatch = vaultItems.find(i => i.itemHash === itemHash);
+  // Bungie sometimes returns itemHash as a string — normalize with Number() on both sides
+  const hashNum = Number(itemHash);
+  const vaultMatch = vaultItems.find(i => Number(i.itemHash) === hashNum);
+
+  console.log(`[Inventory] hash=${hashNum} vault=${!!vaultMatch} vaultSize=${vaultItems.length} charKeys=${Object.keys(charInvData).length}`);
 
   if (vaultMatch) {
     await bungiePost('/Destiny2/Actions/Items/TransferItem/', accessToken, {
-      itemReferenceHash: Number(itemHash),
+      itemReferenceHash: hashNum,
       stackSize:         1,
       transferToVault:   false,
       itemId:            vaultMatch.itemInstanceId,
@@ -98,7 +102,7 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
 
   // Search character inventories (unequipped bags)
   for (const [charId, inv] of Object.entries(charInvData)) {
-    const match = inv.items?.find(i => i.itemHash === itemHash);
+    const match = inv.items?.find(i => Number(i.itemHash) === hashNum);
     if (!match) continue;
 
     if (charId === targetCharId) {
@@ -107,7 +111,7 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
 
     // Move off the other character: char → vault → target char
     await bungiePost('/Destiny2/Actions/Items/TransferItem/', accessToken, {
-      itemReferenceHash: Number(itemHash),
+      itemReferenceHash: hashNum,
       stackSize:         1,
       transferToVault:   true,
       itemId:            match.itemInstanceId,
@@ -115,7 +119,7 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
       membershipType:    Number(membershipType),
     });
     await bungiePost('/Destiny2/Actions/Items/TransferItem/', accessToken, {
-      itemReferenceHash: Number(itemHash),
+      itemReferenceHash: hashNum,
       stackSize:         1,
       transferToVault:   false,
       itemId:            match.itemInstanceId,
@@ -126,8 +130,9 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
   }
 
   // Check if it's only present as an equipped item (can't be moved without unequipping)
-  const isEquipped = allEquipped.some(i => i.itemHash === itemHash);
+  const isEquipped = allEquipped.some(i => Number(i.itemHash) === hashNum);
 
+  console.log(`[Inventory] equipped=${isEquipped} → ${isEquipped ? 'only-equipped' : 'not-owned'}`);
   if (isEquipped) return { ok: false, reason: 'only-equipped' };
   return { ok: false, reason: 'not-owned' };
 }

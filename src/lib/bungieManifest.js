@@ -6,9 +6,10 @@ const require = createRequire(import.meta.url);
 const { parser }       = require('stream-json');
 const { streamObject } = require('stream-json/streamers/StreamObject');
 
-let weaponDefMap    = null;
-let exoticArmorMap  = null; // { 0: [titan exotics], 1: [hunter exotics], 2: [warlock exotics] }
-let loadPromise     = null;
+let weaponDefMap          = null;
+let exoticArmorMap        = null; // { 0: [titan exotics], 1: [hunter exotics], 2: [warlock exotics] }
+let exoticNameToHashes    = null; // 'Exotic Name' → Set<number hash> (all variant hashes)
+let loadPromise           = null;
 
 const TIER_TO_RARITY = { 6: 'exotic', 5: 'legendary', 4: 'rare', 3: 'uncommon', 2: 'common', 1: 'basic' };
 
@@ -64,6 +65,12 @@ export async function getWeaponDef(hash) {
 export async function getExoticArmor(classType) {
   await ensureManifest();
   return exoticArmorMap?.[classType] ?? [];
+}
+
+// Returns all weapon definitions as an array
+export async function getAllWeapons() {
+  await ensureManifest();
+  return Object.values(weaponDefMap ?? {});
 }
 
 export function preloadManifest() {
