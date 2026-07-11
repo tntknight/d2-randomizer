@@ -77,8 +77,22 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
   chars.sort((a, b) => new Date(b.dateLastPlayed) - new Date(a.dateLastPlayed));
   const targetCharId = chars[0].characterId;
 
-  // Search vault
-  const vaultItems = data.profileInventory?.data?.items ?? [];
+  // Debug: log what we're searching for and what the API returned
+  const vaultItems  = data.profileInventory?.data?.items ?? [];
+  const charInvData = data.characterInventories?.data ?? {};
+  const equippedData = data.characterEquipment?.data ?? {};
+  const allCharItems = Object.values(charInvData).flatMap(c => c.items ?? []);
+  const allEquipped  = Object.values(equippedData).flatMap(c => c.items ?? []);
+
+  console.log(`[Inventory] searching for hash=${itemHash} (${typeof itemHash})`);
+  console.log(`[Inventory] vault items=${vaultItems.length}, charInv items=${allCharItems.length}, equipped=${allEquipped.length}`);
+  // Log hashes of anything that looks close (same first 4 digits) to catch type mismatches
+  const target = String(itemHash);
+  const nearby = [...vaultItems, ...allCharItems, ...allEquipped]
+    .filter(i => String(i.itemHash).startsWith(target.slice(0, 4)))
+    .map(i => `${i.itemHash}(${typeof i.itemHash})`);
+  if (nearby.length) console.log(`[Inventory] nearby hashes:`, nearby.join(', '));
+
   const vaultMatch = vaultItems.find(i => i.itemHash === itemHash || i.itemHash === Number(itemHash));
 
   if (vaultMatch) {
@@ -94,7 +108,7 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
   }
 
   // Search character inventories (unequipped bags)
-  for (const [charId, inv] of Object.entries(data.characterInventories?.data ?? {})) {
+  for (const [charId, inv] of Object.entries(charInvData)) {
     const match = inv.items?.find(i => i.itemHash === itemHash || i.itemHash === Number(itemHash));
     if (!match) continue;
 
@@ -123,8 +137,6 @@ export async function pullExoticToInventory(discordUserId, itemHash) {
   }
 
   // Check if it's only present as an equipped item (can't be moved without unequipping)
-  const allEquipped = Object.values(data.characterEquipment?.data ?? {})
-    .flatMap(eq => eq.items ?? []);
   const isEquipped = allEquipped.some(i => i.itemHash === itemHash || i.itemHash === Number(itemHash));
 
   if (isEquipped) return { ok: false, reason: 'only-equipped' };
