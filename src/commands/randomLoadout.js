@@ -2,6 +2,8 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { buildMatchData } from '../lib/comparator.js';
 import { getIconUrl, getWeaponDef } from '../lib/bungieManifest.js';
 import { buildDimSearch } from '../lib/dimSearch.js';
+import { fetchWeapons } from '../lib/bungieVault.js';
+import { getTokens } from '../auth/tokenStore.js';
 import sessionStore from '../lib/sessionStore.js';
 import { SLOTS } from '../lib/loadoutPicker.js';
 
@@ -13,7 +15,7 @@ function randFrom(arr) {
 
 export const data = new SlashCommandBuilder()
   .setName('random-loadout')
-  .setDescription('Roll a random weapon loadout from the server pool with one guaranteed exotic');
+  .setDescription('Roll a random weapon loadout — uses server pool if loaded, otherwise your linked vault');
 
 export async function execute(interaction) {
   await interaction.deferReply();
@@ -22,29 +24,47 @@ export async function execute(interaction) {
     return interaction.editReply('This command only works in a server.');
   }
 
+  let pool;
   const session = sessionStore.get(interaction.guildId);
-  if (!session || session.files.length === 0) {
-    return interaction.editReply(
-      'No weapons in the server pool. Use `/compare-add` to upload a DIM export first.'
-    );
+
+  if (session?.files?.length > 0) {
+    // Use shared server pool
+    if (!session.matchData) session.matchData = buildMatchData(session.files);
+    pool = session.matchData;
+  } else {
+    // Fall back to the caller's linked vault
+    const tokens = getTokens(interaction.user.id);
+    if (!tokens) {
+      return interaction.editReply(
+        'No weapons in the server pool and no linked Bungie account found.\n' +
+        'Run `/load-vault` or `/compare-add` to load weapons, or `/link-account` to link your account.'
+      );
+    }
+    try {
+      const { weapons } = await fetchWeapons(interaction.user.id);
+      pool = weapons;
+    } catch (err) {
+      if (err.message === 'refresh-failed') {
+        return interaction.editReply('Your Bungie session expired. Run `/link-account` to re-link.');
+      }
+      throw err;
+    }
   }
 
-  if (!session.matchData) {
-    session.matchData = buildMatchData(session.files);
-  }
-  const pool = session.matchData;
+  // Normalize exotic flag — matchData uses boolean `exotic`, vault weapons use rarity string
+  const isExotic = w => w.exotic === true || w.rarity === 'exotic';
 
   // Split by slot
   const bySlot = {};
   for (const { key } of SLOTS) {
     bySlot[key] = {
-      exotic:    pool.filter(w => w.category === key && w.exotic),
-      nonExotic: pool.filter(w => w.category === key && !w.exotic),
+      exotic:    pool.filter(w => w.category === key && isExotic(w)),
+      nonExotic: pool.filter(w => w.category === key && !isExotic(w)),
       all:       pool.filter(w => w.category === key),
     };
   }
 
-  const allExotics = pool.filter(w => w.exotic);
+  const allExotics = pool.filter(w => isExotic(w));
   const picks = [];
 
   if (allExotics.length > 0) {
