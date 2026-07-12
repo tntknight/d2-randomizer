@@ -1,10 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { buildMatchData } from '../lib/comparator.js';
 import { getIconUrl, getWeaponDef } from '../lib/bungieManifest.js';
 import { buildDimSearch } from '../lib/dimSearch.js';
 import { fetchWeapons } from '../lib/bungieVault.js';
-import { getTokens } from '../auth/tokenStore.js';
-import sessionStore from '../lib/sessionStore.js';
 import { SLOTS } from '../lib/loadoutPicker.js';
 
 const SLOT_COLORS = { kineticslot: 0x9ba3af, energy: 0x4a9eff, power: 0xc5a93e };
@@ -15,56 +12,38 @@ function randFrom(arr) {
 
 export const data = new SlashCommandBuilder()
   .setName('random-loadout')
-  .setDescription('Roll a random weapon loadout — uses server pool if loaded, otherwise your linked vault');
+  .setDescription('Roll a random loadout from your personal vault with one guaranteed exotic');
 
 export async function execute(interaction) {
   await interaction.deferReply();
 
-  if (!interaction.guildId) {
-    return interaction.editReply('This command only works in a server.');
-  }
-
   let pool;
-  const session = sessionStore.get(interaction.guildId);
-
-  if (session?.files?.length > 0) {
-    // Use shared server pool
-    if (!session.matchData) session.matchData = buildMatchData(session.files);
-    pool = session.matchData;
-  } else {
-    // Fall back to the caller's linked vault
-    const tokens = getTokens(interaction.user.id);
-    if (!tokens) {
+  try {
+    const { weapons } = await fetchWeapons(interaction.user.id);
+    pool = weapons;
+  } catch (err) {
+    if (err.message === 'no-link') {
       return interaction.editReply(
-        'No weapons in the server pool and no linked Bungie account found.\n' +
-        'Run `/load-vault` or `/compare-add` to load weapons, or `/link-account` to link your account.'
+        "Your Bungie account isn't linked. Run `/link-account` first."
       );
     }
-    try {
-      const { weapons } = await fetchWeapons(interaction.user.id);
-      pool = weapons;
-    } catch (err) {
-      if (err.message === 'refresh-failed') {
-        return interaction.editReply('Your Bungie session expired. Run `/link-account` to re-link.');
-      }
-      throw err;
+    if (err.message === 'refresh-failed') {
+      return interaction.editReply('Your Bungie session expired. Run `/link-account` to re-link.');
     }
+    throw err;
   }
 
-  // Normalize exotic flag — matchData uses boolean `exotic`, vault weapons use rarity string
-  const isExotic = w => w.exotic === true || w.rarity === 'exotic';
-
-  // Split by slot
+  // Split by slot — fetchWeapons always uses rarity string from manifest
   const bySlot = {};
   for (const { key } of SLOTS) {
     bySlot[key] = {
-      exotic:    pool.filter(w => w.category === key && isExotic(w)),
-      nonExotic: pool.filter(w => w.category === key && !isExotic(w)),
+      exotic:    pool.filter(w => w.category === key && w.rarity === 'exotic'),
+      nonExotic: pool.filter(w => w.category === key && w.rarity !== 'exotic'),
       all:       pool.filter(w => w.category === key),
     };
   }
 
-  const allExotics = pool.filter(w => isExotic(w));
+  const allExotics = pool.filter(w => w.rarity === 'exotic');
   const picks = [];
 
   if (allExotics.length > 0) {
