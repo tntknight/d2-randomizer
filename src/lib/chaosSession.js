@@ -12,12 +12,14 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-function create(guildId, hostId, channelId) {
+function create(guildId, hostId, channelId, type = 'raid') {
   const session = {
     guildId,
     hostId,
     lobbyMessageId:       null,
     lobbyChannelId:       channelId,
+    type,                              // 'raid' | 'dungeon'
+    maxPlayers:           type === 'dungeon' ? 3 : 6,
     phase:                'lobby',
     players:              [],
     classOptInPending:    0,

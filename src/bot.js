@@ -28,6 +28,11 @@ import * as chaosClassCmd     from './commands/chaosClass.js';
 import * as chaosRaidCmd      from './commands/chaosRaid.js';
 import * as chaosEncounterCmd from './commands/chaosEncounter.js';
 import * as chaosRolesCmd     from './commands/chaosRoles.js';
+import * as dungeonStartCmd   from './commands/dungeonStart.js';
+import * as dungeonRollCmd    from './commands/dungeonRoll.js';
+import * as dungeonEncounterCmd from './commands/dungeonEncounter.js';
+import * as dungeonRolesCmd   from './commands/dungeonRoles.js';
+import * as helpCmd           from './commands/help.js';
 import { handleChaosButton }  from './lib/chaosButtonHandler.js';
 
 const commandModules = [
@@ -38,6 +43,8 @@ const commandModules = [
   randomExoticCmd, randomLoadoutCmd,
   chaosStartCmd, chaosBeginCmd, chaosClassCmd,
   chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd,
+  dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd,
+  helpCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────

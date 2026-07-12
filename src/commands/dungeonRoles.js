@@ -3,16 +3,16 @@ import chaosSession from '../lib/chaosSession.js';
 import { buildEncounterEmbed, buildEncounterRow } from '../lib/chaosButtonHandler.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('chaos-roles')
-  .setDescription('Reroll roles for the current encounter without advancing to the next one');
+  .setName('dungeon-roles')
+  .setDescription('Reroll roles for the current dungeon encounter without advancing');
 
 export async function execute(interaction) {
   const guildId = interaction.guildId;
   const session = chaosSession.get(guildId);
 
-  if (!session || session.phase !== 'encounter') {
+  if (!session || session.phase !== 'encounter' || session.type !== 'dungeon') {
     return interaction.reply({
-      content: 'No active encounter. Run `/raid` or `/dungeon` and keep one first.',
+      content: 'No active dungeon encounter. Run `/dungeon` and keep one first.',
       ephemeral: true,
     });
   }

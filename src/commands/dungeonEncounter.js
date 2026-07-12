@@ -3,8 +3,8 @@ import chaosSession from '../lib/chaosSession.js';
 import { buildEncounterEmbed, buildEncounterRow } from '../lib/chaosButtonHandler.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('encounter')
-  .setDescription('Show an encounter with randomly assigned roles for each player')
+  .setName('dungeon-encounter')
+  .setDescription('Show a dungeon encounter with randomly assigned roles for each player')
   .addIntegerOption(o =>
     o.setName('number')
       .setDescription('Encounter number to jump to (default: current encounter)')
@@ -16,9 +16,9 @@ export async function execute(interaction) {
   const guildId = interaction.guildId;
   const session = chaosSession.get(guildId);
 
-  if (!session || session.phase !== 'encounter') {
+  if (!session || session.phase !== 'encounter' || session.type !== 'dungeon') {
     return interaction.reply({
-      content: 'No active encounter. Run `/raid` or `/dungeon` and keep one first.',
+      content: 'No active dungeon encounter. Run `/dungeon` and keep one first.',
       ephemeral: true,
     });
   }
@@ -29,7 +29,7 @@ export async function execute(interaction) {
   if (requestedNum !== null) {
     if (requestedNum > total) {
       return interaction.reply({
-        content: `That raid only has ${total} encounter(s).`,
+        content: `That dungeon only has ${total} encounter(s).`,
         ephemeral: true,
       });
     }

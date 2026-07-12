@@ -1,6 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import chaosSession from './chaosSession.js';
 import { pickRandomRaid, shuffle } from './raidData.js';
+import { pickRandomDungeon } from './dungeonData.js';
 
 const CLASSES = ['Titan', 'Hunter', 'Warlock'];
 const CLASS_COLORS = { Titan: 0xe8a838, Hunter: 0x4a9eff, Warlock: 0x9b59b6 };
@@ -19,7 +20,8 @@ export async function handleChaosButton(interaction) {
     case 'reroll-raid': return handleRerollRaid(interaction, guildId);
     case 'next-enc':    return handleNextEnc(interaction, guildId);
     case 'reroll-roles':return handleRerollRoles(interaction, guildId);
-    case 'quickroll':   return handleQuickRoll(interaction, guildId);
+    case 'quickroll':     return handleQuickRoll(interaction, guildId);
+    case 'quickdungeon':  return handleQuickDungeon(interaction, guildId);
     default:
       await interaction.reply({ content: 'Unknown chaos action.', ephemeral: true });
   }
@@ -30,13 +32,14 @@ export async function handleChaosButton(interaction) {
 export function buildLobbyEmbed(session) {
   const hostName   = session.players.find(p => p.userId === session.hostId)?.username ?? 'Unknown';
   const playerList = session.players.map(p => p.username).join('\n') || 'None yet';
+  const label      = session.type === 'dungeon' ? 'Dungeon' : 'Chaos Raid';
   return new EmbedBuilder()
-    .setColor(0xc5a93e)
-    .setTitle('Chaos Raid Lobby')
-    .setDescription('A Chaos Raid is forming! Up to 6 players can join.')
+    .setColor(session.type === 'dungeon' ? 0x1abc9c : 0xc5a93e)
+    .setTitle(`${label} Lobby`)
+    .setDescription(`A ${label} is forming! Up to ${session.maxPlayers} players can join.`)
     .addFields(
       { name: 'Host', value: hostName, inline: true },
-      { name: `Players (${session.players.length}/6)`, value: playerList, inline: true },
+      { name: `Players (${session.players.length}/${session.maxPlayers})`, value: playerList, inline: true },
     )
     .setFooter({ text: 'Press Join to enter — host presses Begin when ready' });
 }
@@ -92,10 +95,11 @@ export function buildRaidRollEmbed(session) {
   }).join('\n');
 
   const rerollsLeft = chaosSession.MAX_REROLLS - session.rerollsUsed;
+  const label = session.type === 'dungeon' ? 'Dungeon' : 'Raid';
   return new EmbedBuilder()
-    .setColor(0x9b59b6)
-    .setTitle('Chaos Raid Roll')
-    .setDescription(`Your raid is: **${session.raid.name}**`)
+    .setColor(session.type === 'dungeon' ? 0x1abc9c : 0x9b59b6)
+    .setTitle(`${label} Roll`)
+    .setDescription(`Your ${label.toLowerCase()} is: **${session.raid.name}**`)
     .addFields({ name: 'Players', value: classLines })
     .setFooter({ text: `Rerolls remaining: ${rerollsLeft}/${chaosSession.MAX_REROLLS}` });
 }
@@ -159,15 +163,15 @@ async function handleJoin(interaction, guildId) {
   if (session.players.some(p => p.userId === interaction.user.id)) {
     return interaction.reply({ content: "You're already in the lobby!", ephemeral: true });
   }
-  if (session.players.length >= 6) {
-    return interaction.reply({ content: 'The lobby is full (6/6).', ephemeral: true });
+  if (session.players.length >= session.maxPlayers) {
+    return interaction.reply({ content: `The lobby is full (${session.maxPlayers}/${session.maxPlayers}).`, ephemeral: true });
   }
 
   // Synchronous push before any await to prevent race conditions
   session.players.push({ userId: interaction.user.id, username: interaction.member?.displayName ?? interaction.user.username, wantsRandomClass: null, assignedClass: null });
   chaosSession.update(guildId, {});
 
-  const full = session.players.length >= 6;
+  const full = session.players.length >= session.maxPlayers;
   await interaction.update({
     embeds: [buildLobbyEmbed(session)],
     components: [buildLobbyRow(guildId, full)],
@@ -270,7 +274,9 @@ async function handleRerollRaid(interaction, guildId) {
     return interaction.reply({ content: 'Maximum rerolls reached.', ephemeral: true });
   }
 
-  const newRaid = pickRandomRaid(session.raid.id);
+  const newRaid = session.type === 'dungeon'
+    ? pickRandomDungeon(session.raid.id)
+    : pickRandomRaid(session.raid.id);
   chaosSession.update(guildId, { raid: newRaid, rerollsUsed: session.rerollsUsed + 1 });
 
   await interaction.update({
@@ -331,11 +337,30 @@ async function handleQuickRoll(interaction, guildId) {
     .setTitle('Random Raid')
     .setDescription(`**${raid.name}**`)
     .addFields({ name: 'Encounters', value: raid.encounters.map((e, i) => `${i + 1}. ${e.name}`).join('\n') })
-    .setFooter({ text: 'Use /chaos-start to run a full chaos session' });
+    .setFooter({ text: 'Use /chaos-start to run a full chaos raid session' });
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`chaos:quickroll:${guildId}`)
+      .setLabel('Roll Again')
+      .setStyle(ButtonStyle.Primary),
+  );
+
+  await interaction.update({ embeds: [embed], components: [row] });
+}
+
+async function handleQuickDungeon(interaction, guildId) {
+  const dungeon = pickRandomDungeon();
+  const embed = new EmbedBuilder()
+    .setColor(0x1abc9c)
+    .setTitle('Random Dungeon')
+    .setDescription(`**${dungeon.name}**`)
+    .addFields({ name: 'Encounters', value: dungeon.encounters.map((e, i) => `${i + 1}. ${e.name}`).join('\n') })
+    .setFooter({ text: 'Use /dungeon-start to run a full dungeon session' });
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`chaos:quickdungeon:${guildId}`)
       .setLabel('Roll Again')
       .setStyle(ButtonStyle.Primary),
   );
