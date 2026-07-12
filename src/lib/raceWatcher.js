@@ -3,7 +3,7 @@ import { getTokens } from '../auth/tokenStore.js';
 import { getCharacterIds, getLatestActivity, getPGCR } from './bungieActivity.js';
 
 const POLL_MS  = 30_000;
-const SRL_MODE = 94;
+const SRL_MODE = 32;
 
 // Medals for finish positions
 const MEDALS = ['🥇', '🥈', '🥉'];
