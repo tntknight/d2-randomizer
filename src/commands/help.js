@@ -61,6 +61,17 @@ export async function execute(interaction) {
             '`/chaos-roles` — Reroll roles for the current encounter without advancing',
           ].join('\n'),
         },
+        {
+          name: '🏚️ Chaos Dungeons',
+          value: [
+            '`/dungeon-start` — Open a Chaos Dungeon lobby (up to 3 players can join via button)',
+            '`/chaos-begin` — Close the lobby and move to class opt-in *(host only)*',
+            '`/chaos-class <yes|no>` — Choose whether you want a randomly assigned class',
+            '`/dungeon` — Roll a random dungeon; during a session rerolls the dungeon *(host only)*',
+            '`/dungeon-encounter [number]` — Show the current dungeon encounter with roles assigned per player',
+            '`/dungeon-roles` — Reroll roles for the current dungeon encounter without advancing',
+          ].join('\n'),
+        },
       )
       .setFooter({ text: 'Bungie account required for: load-vault, random-loadout, random-exotic, pvp-watch, srl-watch' }),
   ];
