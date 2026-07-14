@@ -106,42 +106,21 @@ async function poll(state) {
 async function postRaceResult(pgcr, state) {
   const entries = pgcr.entries ?? [];
 
-  // Log raw stat keys from first entry so we can learn the PGCR structure
-  if (entries[0]) {
-    const rawKeys = Object.entries(entries[0].values ?? {}).map(
-      ([k, v]) => `${k}=${v?.basic?.displayValue ?? v?.basic?.value}`
-    );
-    console.log('[RaceWatcher] PGCR stat keys:', rawKeys.join(', '));
-  }
-
-  // Sort by standing (finish position) — fall back to score if not present
-  const sorted = [...entries].sort((a, b) => {
-    const aPos = a.values?.standing?.basic?.value ?? a.values?.finishRank?.basic?.value ?? 999;
-    const bPos = b.values?.standing?.basic?.value ?? b.values?.finishRank?.basic?.value ?? 999;
-    // If standing looks like it's 0-indexed position, lower = better
-    // If it's 0=Victory/1=Defeat style, sort by score instead
-    if (aPos === bPos) {
-      return (b.values?.score?.basic?.value ?? 0) - (a.values?.score?.basic?.value ?? 0);
-    }
-    return aPos - bPos;
-  });
+  // Sort by score descending — standing field is unreliable for SRL private matches
+  const sorted = [...entries].sort((a, b) =>
+    (b.values?.score?.basic?.value ?? 0) - (a.values?.score?.basic?.value ?? 0)
+  );
 
   const lines = sorted.map((entry, i) => {
     const name      = entry.player?.destinyUserInfo?.displayName ?? 'Unknown';
     const completed = (entry.values?.completed?.basic?.value ?? 1) === 1;
     const isMe      = entry.player?.destinyUserInfo?.membershipId === state.membershipId;
 
-    // Try various time stat keys Bungie might use
-    const timeVal = entry.values?.fastestLapTime?.basic?.displayValue
-      ?? entry.values?.lapTime?.basic?.displayValue
-      ?? entry.values?.bestLapTime?.basic?.displayValue
-      ?? null;
-
-    const score   = entry.values?.score?.basic?.displayValue ?? null;
-    const medal   = MEDALS[i] ?? `${i + 1}.`;
-    const dnf     = completed ? '' : ' _(DNF)_';
-    const timeStr = timeVal ? ` — ${timeVal}` : (score ? ` — ${score} pts` : '');
-    const line    = `${medal} ${name}${timeStr}${dnf}`;
+    const score  = entry.values?.score?.basic?.displayValue ?? null;
+    const medal  = MEDALS[i] ?? `${i + 1}.`;
+    const dnf    = completed ? '' : ' _(DNF)_';
+    const stat   = score ? ` — ${score} pts` : '';
+    const line   = `${medal} ${name}${stat}${dnf}`;
     return isMe ? `**${line}**` : line;
   });
 
