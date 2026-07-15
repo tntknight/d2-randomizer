@@ -45,3 +45,11 @@ export async function getPGCR(instanceId) {
   if (json.ErrorCode !== 1) return null;
   return json.Response ?? null;
 }
+
+// Returns the display name of an activity from its definition hash, or fallback
+export async function getActivityName(referenceId, fallback = 'Raid') {
+  if (!referenceId) return fallback;
+  const res  = await fetch(`${BASE}/Destiny2/Manifest/DestinyActivityDefinition/${referenceId}/`, { headers: apiHeaders() });
+  const json = await res.json();
+  return json.Response?.displayProperties?.name ?? fallback;
+}
