@@ -34,6 +34,7 @@ export async function execute(interaction) {
             '`/random-exotic [class]` — Pick a random exotic armor piece for your class (auto-detects if linked)',
             '`/random-loadout` — Roll a random 3-weapon loadout from your vault with one guaranteed exotic',
             '`/random-map` — Pick a random D2 PvP map',
+            '`/roll-class` — Roll a random Destiny 2 class (Titan / Hunter / Warlock)',
           ].join('\n'),
         },
         {
@@ -57,8 +58,8 @@ export async function execute(interaction) {
             '`/chaos-begin` — Close the lobby and move to class opt-in *(host only)*',
             '`/chaos-class <yes|no>` — Choose whether you want a randomly assigned class',
             '`/raid` — Roll a random raid; during a session rerolls the raid *(host only)*',
-            '`/encounter [number]` — Show the current encounter with roles assigned per player',
-            '`/chaos-roles` — Reroll roles for the current encounter without advancing',
+            '`/encounter [number]` — Show the current encounter with roles assigned per player *(host only)*',
+            '`/chaos-roles` — Reroll roles for the current encounter without advancing *(host only)*',
           ].join('\n'),
         },
         {
@@ -68,8 +69,8 @@ export async function execute(interaction) {
             '`/chaos-begin` — Close the lobby and move to class opt-in *(host only)*',
             '`/chaos-class <yes|no>` — Choose whether you want a randomly assigned class',
             '`/dungeon` — Roll a random dungeon; during a session rerolls the dungeon *(host only)*',
-            '`/dungeon-encounter [number]` — Show the current dungeon encounter with roles assigned per player',
-            '`/dungeon-roles` — Reroll roles for the current dungeon encounter without advancing',
+            '`/dungeon-encounter [number]` — Show the current dungeon encounter with roles assigned per player *(host only)*',
+            '`/dungeon-roles` — Reroll roles for the current dungeon encounter without advancing *(host only)*',
           ].join('\n'),
         },
       )

@@ -1,6 +1,6 @@
 # D2 Compare Bot
 
-A Discord bot for Destiny 2 groups. It compares weapon inventories across players to roll shared loadouts, and runs Chaos Raids — randomized raid sessions with random role assignments for each encounter.
+A Discord bot for Destiny 2 groups. It compares weapon inventories across players to roll shared loadouts, and runs Chaos Raids and Chaos Dungeons — randomized activity sessions with random role assignments for each encounter.
 
 Players can either upload a [DIM](https://app.destinyitemmanager.com/) CSV export or link their Bungie account so the bot fetches their vault automatically.
 
@@ -22,8 +22,12 @@ Players can either upload a [DIM](https://app.destinyitemmanager.com/) CSV expor
 3. Each player chooses whether they want a randomly assigned class
 4. A random raid is rolled — the host can keep it or reroll up to 3 times
 5. Once confirmed, the bot shows the first encounter with a random role assigned to each player
-6. Players step through every encounter with **Next Encounter**; roles are reshuffled each time
+6. The host steps through every encounter with **Next Encounter**; roles are reshuffled each time
 7. Every step is also available as a standalone command for groups that want to skip the full flow
+
+### Chaos Dungeons
+
+Same flow as Chaos Raids but capped at 3 players and pulls from the dungeon pool instead. Use `/dungeon-start` to open a dungeon lobby.
 
 ---
 
@@ -36,11 +40,22 @@ All commands are available as both slash commands (`/command`) and prefix comman
 | Command | Description |
 |---|---|
 | `/chaos-start` | Open a Chaos Raid lobby (up to 6 players) |
-| `/chaos-begin` | Close the lobby and start class opt-in (host only) |
+| `/chaos-begin` | Close the lobby and start class opt-in *(host only)* |
 | `/chaos-class choice:<Yes\|No>` | Record your random class preference |
-| `/chaos-raid` | Roll a random raid — works standalone or rerolls during a session |
-| `/chaos-encounter [number]` | Show an encounter with randomly assigned roles; jump to a specific encounter by number |
-| `/chaos-roles` | Reroll roles for the current encounter without advancing |
+| `/raid` | Roll a random raid — works standalone or rerolls during a session *(host only in session)* |
+| `/encounter [number]` | Show an encounter with randomly assigned roles; jump to a specific encounter by number *(host only)* |
+| `/chaos-roles` | Reroll roles for the current encounter without advancing *(host only)* |
+
+### Chaos Dungeons
+
+| Command | Description |
+|---|---|
+| `/dungeon-start` | Open a Chaos Dungeon lobby (up to 3 players) |
+| `/chaos-begin` | Close the lobby and start class opt-in *(host only)* |
+| `/chaos-class choice:<Yes\|No>` | Record your random class preference |
+| `/dungeon` | Roll a random dungeon — works standalone or rerolls during a session *(host only in session)* |
+| `/dungeon-encounter [number]` | Show a dungeon encounter with randomly assigned roles *(host only)* |
+| `/dungeon-roles` | Reroll roles for the current dungeon encounter without advancing *(host only)* |
 
 ### Adding weapons
 
@@ -74,6 +89,7 @@ All commands are available as both slash commands (`/command`) and prefix comman
 | `/random-loadout` | Roll a random weapon loadout (one guaranteed exotic) from the server pool |
 | `/random-exotic [class]` | Pick a random exotic armor piece — defaults to your most recently played class |
 | `/random-map` | Pick a random D2 PvP map |
+| `/roll-class` | Roll a random Destiny 2 class (Titan / Hunter / Warlock) |
 
 The **Pull to Inventory** button on `/random-exotic` results transfers the exotic from your vault or another character to your active character (requires a linked Bungie account).
 
@@ -83,10 +99,10 @@ The **Pull to Inventory** button on `/random-exotic` results transfers the exoti
 |---|---|
 | `/pvp-watch` | Start watching for PvP match completions — posts a scoreboard and rolls a loadout after each match |
 | `/pvp-stop` | Stop watching for PvP matches |
-| `/srl-watch` | Start watching for Sparrow Racing League race completions — posts finish order and times |
+| `/srl-watch` | Start watching for Sparrow Racing League private match results — posts finish order after each race |
 | `/srl-stop` | Stop watching for SRL races |
 
-The bot polls the Bungie API every 30 seconds. Private matches are included. Watching is per-user and stops automatically if you restart the bot.
+The bot polls the Bungie API every 30 seconds. Watching is per-user and stops automatically when the bot restarts.
 
 ---
 
@@ -177,12 +193,12 @@ src/
     loadout.js            # /compare-loadout — roll a loadout
     clear.js              # /compare-clear — reset session
     drop.js               # /compare-drop — remove a file
-    dimsearch.js          # /compare-dimsearch — export DIM search string
     linkAccount.js        # /link-account — start Bungie OAuth flow
     loadVault.js          # /load-vault — fetch vault from Bungie
     randomMap.js          # /random-map — pick a random PvP map
     randomExotic.js       # /random-exotic — pick a random exotic armor piece
     randomLoadout.js      # /random-loadout — roll a loadout from the server pool
+    rollClass.js          # /roll-class — roll a random class
     pvpWatch.js           # /pvp-watch — start watching for PvP match completions
     pvpStop.js            # /pvp-stop — stop watching
     srlWatch.js           # /srl-watch — start watching for SRL race completions
@@ -190,9 +206,13 @@ src/
     chaosStart.js         # /chaos-start — open a Chaos Raid lobby
     chaosBegin.js         # /chaos-begin — close lobby and start class opt-in
     chaosClass.js         # /chaos-class — record class preference
-    chaosRaid.js          # /chaos-raid — roll a random raid
-    chaosEncounter.js     # /chaos-encounter — show encounter with role assignments
+    chaosRaid.js          # /raid — roll a random raid
+    chaosEncounter.js     # /encounter — show encounter with role assignments
     chaosRoles.js         # /chaos-roles — reroll roles for current encounter
+    dungeonStart.js       # /dungeon-start — open a Chaos Dungeon lobby
+    dungeonRoll.js        # /dungeon — roll a random dungeon
+    dungeonEncounter.js   # /dungeon-encounter — show dungeon encounter with role assignments
+    dungeonRoles.js       # /dungeon-roles — reroll roles for current dungeon encounter
   lib/
     sessionStore.js       # In-memory per-server weapon pool
     csvParser.js          # Parses DIM CSV exports
@@ -207,7 +227,8 @@ src/
     raceWatcher.js        # Per-user SRL race polling (30 s interval)
     messageInteraction.js # Adapter so prefix commands reuse slash command logic
     raidData.js           # All raids, encounters, and per-encounter role lists
-    chaosSession.js       # In-memory per-guild Chaos Raid session state (3-hr TTL)
+    dungeonData.js        # All dungeons, encounters, and per-encounter role lists
+    chaosSession.js       # In-memory per-guild session state for raids and dungeons (3-hr TTL)
     chaosButtonHandler.js # Dispatches chaos: button interactions; shared embed builders
   auth/
     bungieOAuth.js        # OAuth URL builder, token exchange, token refresh
