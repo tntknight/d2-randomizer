@@ -8,6 +8,13 @@ const SRL_MODE = 32;
 // Medals for finish positions
 const MEDALS = ['🥇', '🥈', '🥉'];
 
+function msToRaceTime(ms) {
+  const totalSeconds = ms / 1000;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = (totalSeconds % 60).toFixed(1);
+  return `${minutes}:${seconds.padStart(4, '0')}`;
+}
+
 // userId → watcher state
 const watchers = new Map();
 
@@ -106,9 +113,9 @@ async function poll(state) {
 async function postRaceResult(pgcr, state) {
   const entries = pgcr.entries ?? [];
 
-  // Sort by score descending — standing field is unreliable for SRL private matches
+  // Sort by score ascending — score is race time in ms, lower = faster = better finish
   const sorted = [...entries].sort((a, b) =>
-    (b.values?.score?.basic?.value ?? 0) - (a.values?.score?.basic?.value ?? 0)
+    (a.values?.score?.basic?.value ?? Infinity) - (b.values?.score?.basic?.value ?? Infinity)
   );
 
   const lines = sorted.map((entry, i) => {
@@ -116,11 +123,11 @@ async function postRaceResult(pgcr, state) {
     const completed = (entry.values?.completed?.basic?.value ?? 1) === 1;
     const isMe      = entry.player?.destinyUserInfo?.membershipId === state.membershipId;
 
-    const score  = entry.values?.score?.basic?.displayValue ?? null;
-    const medal  = MEDALS[i] ?? `${i + 1}.`;
-    const dnf    = completed ? '' : ' _(DNF)_';
-    const stat   = score ? ` — ${score} pts` : '';
-    const line   = `${medal} ${name}${stat}${dnf}`;
+    const scoreMs = entry.values?.score?.basic?.value ?? null;
+    const medal   = MEDALS[i] ?? `${i + 1}.`;
+    const dnf     = completed ? '' : ' _(DNF)_';
+    const stat    = scoreMs != null ? ` — ${msToRaceTime(scoreMs)}` : '';
+    const line    = `${medal} ${name}${stat}${dnf}`;
     return isMe ? `**${line}**` : line;
   });
 
