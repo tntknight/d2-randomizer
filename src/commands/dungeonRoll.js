@@ -40,7 +40,7 @@ export async function execute(interaction) {
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`chaos:quickdungeon:${guildId}`)
+      .setCustomId(`chaos:quickdungeon:${guildId}:${interaction.user.id}`)
       .setLabel('Roll Again')
       .setStyle(ButtonStyle.Primary),
   );

@@ -291,8 +291,8 @@ async function handleNextEnc(interaction, guildId) {
   if (session.phase !== 'encounter') {
     return interaction.reply({ content: 'No active raid encounter.', ephemeral: true });
   }
-  if (!session.players.some(p => p.userId === interaction.user.id)) {
-    return interaction.reply({ content: "You're not in this session.", ephemeral: true });
+  if (session.hostId !== interaction.user.id) {
+    return interaction.reply({ content: 'Only the host can advance encounters.', ephemeral: true });
   }
 
   const nextIndex = session.currentEncounterIndex + 1;
@@ -319,8 +319,8 @@ async function handleRerollRoles(interaction, guildId) {
   if (session.phase !== 'encounter') {
     return interaction.reply({ content: 'No active raid encounter.', ephemeral: true });
   }
-  if (!session.players.some(p => p.userId === interaction.user.id)) {
-    return interaction.reply({ content: "You're not in this session.", ephemeral: true });
+  if (session.hostId !== interaction.user.id) {
+    return interaction.reply({ content: 'Only the host can reroll roles.', ephemeral: true });
   }
 
   chaosSession.update(guildId, {});
@@ -331,6 +331,11 @@ async function handleRerollRoles(interaction, guildId) {
 }
 
 async function handleQuickRoll(interaction, guildId) {
+  const ownerId = interaction.customId.split(':')[3];
+  if (interaction.user.id !== ownerId) {
+    return interaction.reply({ content: 'Only the person who rolled can reroll.', ephemeral: true });
+  }
+
   const raid = pickRandomRaid();
   const embed = new EmbedBuilder()
     .setColor(0x9b59b6)
@@ -341,7 +346,7 @@ async function handleQuickRoll(interaction, guildId) {
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`chaos:quickroll:${guildId}`)
+      .setCustomId(`chaos:quickroll:${guildId}:${ownerId}`)
       .setLabel('Roll Again')
       .setStyle(ButtonStyle.Primary),
   );
@@ -350,6 +355,11 @@ async function handleQuickRoll(interaction, guildId) {
 }
 
 async function handleQuickDungeon(interaction, guildId) {
+  const ownerId = interaction.customId.split(':')[3];
+  if (interaction.user.id !== ownerId) {
+    return interaction.reply({ content: 'Only the person who rolled can reroll.', ephemeral: true });
+  }
+
   const dungeon = pickRandomDungeon();
   const embed = new EmbedBuilder()
     .setColor(0x1abc9c)
@@ -360,7 +370,7 @@ async function handleQuickDungeon(interaction, guildId) {
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`chaos:quickdungeon:${guildId}`)
+      .setCustomId(`chaos:quickdungeon:${guildId}:${ownerId}`)
       .setLabel('Roll Again')
       .setStyle(ButtonStyle.Primary),
   );
