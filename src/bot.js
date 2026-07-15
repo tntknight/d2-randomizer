@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { preloadManifest } from './lib/bungieManifest.js';
 import { startCallbackServer } from './server/callbackServer.js';
 import { MessageInteraction } from './lib/messageInteraction.js';
@@ -33,6 +33,7 @@ import * as dungeonRollCmd    from './commands/dungeonRoll.js';
 import * as dungeonEncounterCmd from './commands/dungeonEncounter.js';
 import * as dungeonRolesCmd   from './commands/dungeonRoles.js';
 import * as helpCmd           from './commands/help.js';
+import * as rollClassCmd      from './commands/rollClass.js';
 import { handleChaosButton }  from './lib/chaosButtonHandler.js';
 
 const commandModules = [
@@ -44,7 +45,7 @@ const commandModules = [
   chaosStartCmd, chaosBeginCmd, chaosClassCmd,
   chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd,
   dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd,
-  helpCmd,
+  helpCmd, rollClassCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
@@ -78,6 +79,31 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.customId.startsWith('chaos:')) {
     await handleChaosButton(interaction);
+    return;
+  }
+
+  if (interaction.customId.startsWith('rollclass:reroll:')) {
+    const [, , guildId, ownerId] = interaction.customId.split(':');
+    if (interaction.user.id !== ownerId) {
+      return interaction.reply({ content: 'Only the person who rolled can reroll.', ephemeral: true });
+    }
+    const CLASSES = [
+      { name: 'Titan',   color: 0xe8a838, emoji: '🛡️' },
+      { name: 'Hunter',  color: 0x4a9eff, emoji: '🗡️' },
+      { name: 'Warlock', color: 0x9b59b6, emoji: '✨' },
+    ];
+    const cls = CLASSES[Math.floor(Math.random() * CLASSES.length)];
+    const embed = new EmbedBuilder()
+      .setColor(cls.color)
+      .setTitle(`${cls.emoji} ${cls.name}`)
+      .setDescription(`${interaction.member?.displayName ?? interaction.user.username} rolled **${cls.name}**`);
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`rollclass:reroll:${guildId}:${ownerId}`)
+        .setLabel('Reroll')
+        .setStyle(ButtonStyle.Secondary),
+    );
+    await interaction.update({ embeds: [embed], components: [row] });
     return;
   }
 

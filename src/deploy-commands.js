@@ -35,8 +35,9 @@ import * as dungeonRollCmd    from './commands/dungeonRoll.js';
 import * as dungeonEncounterCmd from './commands/dungeonEncounter.js';
 import * as dungeonRolesCmd   from './commands/dungeonRoles.js';
 import * as helpCmd           from './commands/help.js';
+import * as rollClassCmd      from './commands/rollClass.js';
 
-const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd]
+const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd, rollClassCmd]
   .map(mod => mod.data.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
