@@ -351,34 +351,39 @@ async function handleShowAppearances(interaction, guildId) {
 
   const linkOrName = (item) => item.iconUrl ? `[${item.name}](${item.iconUrl})` : item.name;
 
-  const embeds = await Promise.all(session.players.map(async (p) => {
-    try {
-      const a = await fetchEquippedAppearance(p.userId);
-      return new EmbedBuilder()
-        .setColor(0x9b59b6)
-        .setTitle(p.username)
-        .setThumbnail(a.ghost.iconUrl)
-        .addFields(
-          { name: 'Ghost',      value: linkOrName(a.ghost),     inline: true },
-          { name: 'Helmet',     value: linkOrName(a.helmet),    inline: true },
-          { name: 'Arms',       value: linkOrName(a.gauntlets), inline: true },
-          { name: 'Chest',      value: linkOrName(a.chest),     inline: true },
-          { name: 'Legs',       value: linkOrName(a.legs),      inline: true },
-          { name: 'Class Item', value: linkOrName(a.classItem), inline: true },
-        );
-    } catch (err) {
-      return new EmbedBuilder()
-        .setColor(0x95a5a6)
-        .setTitle(p.username)
-        .setDescription(
-          err.message === 'no-link'
-            ? 'Bungie account not linked — run `/link-account` to connect.'
-            : 'Could not fetch appearance data.'
-        );
-    }
-  }));
+  try {
+    const embeds = await Promise.all(session.players.map(async (p) => {
+      try {
+        const a = await fetchEquippedAppearance(p.userId);
+        return new EmbedBuilder()
+          .setColor(0x9b59b6)
+          .setTitle(p.username)
+          .setThumbnail(a.ghost.iconUrl)
+          .addFields(
+            { name: 'Ghost',      value: linkOrName(a.ghost),     inline: true },
+            { name: 'Helmet',     value: linkOrName(a.helmet),    inline: true },
+            { name: 'Arms',       value: linkOrName(a.gauntlets), inline: true },
+            { name: 'Chest',      value: linkOrName(a.chest),     inline: true },
+            { name: 'Legs',       value: linkOrName(a.legs),      inline: true },
+            { name: 'Class Item', value: linkOrName(a.classItem), inline: true },
+          );
+      } catch (err) {
+        return new EmbedBuilder()
+          .setColor(0x95a5a6)
+          .setTitle(p.username)
+          .setDescription(
+            err.message === 'no-link'
+              ? 'Bungie account not linked — run `/link-account` to connect.'
+              : 'Could not fetch appearance data.'
+          );
+      }
+    }));
 
-  await interaction.editReply({ embeds });
+    await interaction.editReply({ embeds });
+  } catch (err) {
+    console.error('[show-appearances] Error:', err);
+    await interaction.editReply({ content: 'Failed to fetch appearance data. Try again in a moment.' });
+  }
 }
 
 async function handleQuickRoll(interaction, guildId) {

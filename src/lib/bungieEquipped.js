@@ -15,6 +15,7 @@ const BUCKET = {
 
 async function bungieGet(path, accessToken) {
   const res = await fetch(`${BUNGIE_BASE}${path}`, {
+    signal: AbortSignal.timeout(10_000),
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'X-API-Key':     process.env.BUNGIE_API_KEY,
