@@ -14,6 +14,7 @@ export class MessageInteraction {
     this.channel   = message.channel;
     this.client    = message.client;
     this.user      = message.author; // has .id and .username, same as Interaction.user
+    this.guild     = message.guild ?? null;
     this._reply    = null;
     this.deferred  = false;
     this.replied   = false;
@@ -50,6 +51,7 @@ export class MessageInteraction {
   get options() {
     const args        = this.args;
     const attachments = [...this.message.attachments.values()];
+    const message     = this.message;
     return {
       // compare-add uses file1–file8; map fileN → index N-1 in the attachment list
       getAttachment(name) {
@@ -65,6 +67,13 @@ export class MessageInteraction {
       getInteger(_name) {
         const n = parseInt(args[0], 10);
         return isNaN(n) ? null : n;
+      },
+      // playerN options map to the Nth @mention in the message (0-indexed)
+      getUser(name) {
+        const m = name.match(/^player(\d+)$/);
+        const i = m ? parseInt(m[1], 10) - 1 : 0;
+        const users = [...(message.mentions?.users?.values() ?? [])];
+        return users[i] ?? null;
       },
     };
   }
