@@ -57,11 +57,11 @@ export const RAIDS = [
     id: 'kings-fall',
     name: "King's Fall",
     encounters: [
-      { name: 'Totems',               roles: ['1st Left', '2nd Left', '3rd Left', '1st Right', '2nd Right', '3rd Right'], imageUrl: null },
-      { name: 'Warpriest',            roles: ['Plate Left', 'Plate Mid', 'Plate Right', 'Relic Left', 'Relic Mid', 'Relic Right'], imageUrl: null },
-      { name: 'Golgoroth',            roles: ['1st Gaze', '2nd Gaze', 'Pit', 'Pit', 'Pit', 'Pit'], imageUrl: null },
-      { name: 'Daughters of Oryx',    roles: ['Plate R1', 'Plate R2', 'Plate L1', 'Plate L2', 'Float Back', 'Float Front'], imageUrl: null },
-      { name: 'Oryx, the Taken King', roles: ['Plate R1', 'Plate R2', 'Plate L1', 'Plate L2', 'Float Back', 'Float Front'], imageUrl: null },
+      { name: 'Totems',               roles: ['1st Left', '2nd Left', '3rd Left', '1st Right', '2nd Right', '3rd Right'], imageUrl: "https://cdn.discordapp.com/attachments/1410620693036404776/1410649004181819392/Kings-Fall-Totem-E1-v6.png?ex=6a58fa43&is=6a57a8c3&hm=8c5ce05b89aaae3abc0770203b4ce9832e95a04bcb30c17fa084c4c8bc6f2b62&" },
+      { name: 'Warpriest',            roles: ['Plate Left', 'Plate Mid', 'Plate Right', 'Relic Left', 'Relic Mid', 'Relic Right'], imageUrl: "https://cdn.discordapp.com/attachments/1410620693036404776/1410649135597752493/3CIQ471hHj45LQPH_UXHnkpHKYapbASlyOT3O7X5tm4.webp?ex=6a58fa62&is=6a57a8e2&hm=59d44c2ee3110ffff040de93ff1cf73153bd6b574d448bb655fa66b808c42715&" },
+      { name: 'Golgoroth',            roles: ['1st Gaze', '2nd Gaze', 'Pit', 'Pit', 'Pit', 'Pit'], imageUrl: "https://cdn.discordapp.com/attachments/1410620693036404776/1410649219785818193/Kings-Fall-Golgoroth-E3-v6.jpg?ex=6a58fa76&is=6a57a8f6&hm=85e22c696228a3abb48f8dc68581e39905068cac53c053cdbcfc1e6537550dc2&" },
+      { name: 'Daughters of Oryx',    roles: ['Plate R1', 'Plate R2', 'Plate L1', 'Plate L2', 'Float Back', 'Float Front'], imageUrl: "https://cdn.discordapp.com/attachments/1410620693036404776/1410649937355608146/sisters_info.png?ex=6a58fb21&is=6a57a9a1&hm=c952cade70e814b21e73e2c97fb94cc8f97f8d025a5448da80b205a23c6077df&" },
+      { name: 'Oryx, the Taken King', roles: ['Plate R1', 'Plate R2', 'Plate L1', 'Plate L2', 'Float Back', 'Float Front'], imageUrl: "https://cdn.discordapp.com/attachments/1410620693036404776/1410649986949189722/Destiny-2-Kings-Fall-Loot-table-infographic-v2.jpg?ex=6a58fb2d&is=6a57a9ad&hm=c83cff23839cf52be3288e451722c938aace76b14d59b9e7f39a7b151b31a636&" },
     ],
   },
   {
