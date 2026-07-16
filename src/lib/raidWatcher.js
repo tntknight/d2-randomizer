@@ -110,7 +110,13 @@ async function postRaidResult(pgcr, state) {
     (b.values?.kills?.basic?.value ?? 0) - (a.values?.kills?.basic?.value ?? 0)
   );
 
-  const fields = await Promise.all(sorted.map(async e => {
+  const headerEmbed = new EmbedBuilder()
+    .setColor(cleared ? 0x2ecc71 : 0xed4245)
+    .setTitle(cleared ? `🏰 ${raidName} — Cleared!` : `🏰 ${raidName} — Not Completed`)
+    .setTimestamp(new Date(pgcr.period));
+  if (duration) headerEmbed.setFooter({ text: `Duration: ${duration}` });
+
+  const playerEmbeds = await Promise.all(sorted.map(async e => {
     const name      = e.player?.destinyUserInfo?.displayName ?? 'Unknown';
     const kills     = Math.round(e.values?.kills?.basic?.value   ?? 0);
     const deaths    = Math.round(e.values?.deaths?.basic?.value  ?? 0);
@@ -121,36 +127,34 @@ async function postRaidResult(pgcr, state) {
     const status    = completed ? '✅' : '❌';
     const marker    = isMe ? ' ★' : '';
 
-    // Top 3 weapons by kills
     const topWeapons = (e.extended?.weapons ?? [])
       .sort((a, b) => (b.values?.uniqueWeaponKills?.basic?.value ?? 0) - (a.values?.uniqueWeaponKills?.basic?.value ?? 0))
       .slice(0, 3);
 
-    const weaponLines = await Promise.all(topWeapons.map(async w => {
-      const wKills = w.values?.uniqueWeaponKills?.basic?.value ?? 0;
-      const def    = await getWeaponDef(w.referenceId).catch(() => null);
-      const wName  = def?.name ?? 'Unknown Weapon';
-      return `• ${wName}: ${wKills}`;
+    const weaponDefs = await Promise.all(
+      topWeapons.map(w => getWeaponDef(w.referenceId).catch(() => null))
+    );
+
+    const fields = topWeapons.map((w, i) => ({
+      name:   weaponDefs[i]?.name ?? 'Unknown Weapon',
+      value:  `${w.values?.uniqueWeaponKills?.basic?.value ?? 0} kills`,
+      inline: true,
     }));
 
-    return {
-      name:   `${status} ${name}${marker}: ${kills}/${deaths}/${assists} (${kd} KD)`,
-      value:  weaponLines.join('\n') || '• No weapon data',
-      inline: false,
-    };
+    const embed = new EmbedBuilder()
+      .setColor(completed ? 0x2ecc71 : 0xed4245)
+      .setTitle(`${status} ${name}${marker}`)
+      .setDescription(`${kills} / ${deaths} / ${assists}  •  ${kd} KD`);
+
+    if (fields.length)            embed.addFields(...fields);
+    if (weaponDefs[0]?.iconUrl)   embed.setThumbnail(weaponDefs[0].iconUrl);
+
+    return embed;
   }));
-
-  const embed = new EmbedBuilder()
-    .setColor(cleared ? 0x2ecc71 : 0xed4245)
-    .setTitle(cleared ? `🏰 ${raidName} — Cleared!` : `🏰 ${raidName} — Not Completed`)
-    .addFields(...fields)
-    .setTimestamp(new Date(pgcr.period));
-
-  if (duration) embed.setFooter({ text: `Duration: ${duration}` });
 
   const content = cleared
     ? `Well done, ${state.displayName}! Raid cleared!`
     : `Raid ended, ${state.displayName}.`;
 
-  await state.channel.send({ content, embeds: [embed] });
+  await state.channel.send({ content, embeds: [headerEmbed, ...playerEmbeds] });
 }
