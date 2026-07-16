@@ -1,6 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { getTokens } from '../auth/tokenStore.js';
 import { getCharacterIds, getLatestActivity, getPGCR, getActivityName } from './bungieActivity.js';
+import { getWeaponDef } from './bungieManifest.js';
 
 const POLL_MS   = 30_000;
 const RAID_MODE = 4;
@@ -99,34 +100,50 @@ async function poll(state) {
 // ── Raid result post ──────────────────────────────────────────────────────────
 
 async function postRaidResult(pgcr, state) {
-  console.log('[RaidWatcher] activityDetails:', JSON.stringify(pgcr.activityDetails ?? {}));
-  for (const e of (pgcr.entries ?? [])) {
-    const name  = e.player?.destinyUserInfo?.displayName ?? 'Unknown';
-    const stats = Object.entries(e.values ?? {}).map(([k, v]) => `${k}=${v?.basic?.displayValue ?? v?.basic?.value}`).join(', ');
-    console.log(`[RaidWatcher] ${name}: ${stats}`);
-  }
   const entries  = pgcr.entries ?? [];
   const raidName = await getActivityName(pgcr.activityDetails?.referenceId, 'Raid').catch(() => 'Raid');
   const duration = entries[0]?.values?.activityDurationSeconds?.basic?.displayValue ?? null;
   const cleared  = entries.some(e => e.values?.completed?.basic?.value === 1);
 
-  const lines = entries.map(e => {
+  // Sort players by kills descending
+  const sorted = [...entries].sort((a, b) =>
+    (b.values?.kills?.basic?.value ?? 0) - (a.values?.kills?.basic?.value ?? 0)
+  );
+
+  const fields = await Promise.all(sorted.map(async e => {
     const name      = e.player?.destinyUserInfo?.displayName ?? 'Unknown';
     const kills     = Math.round(e.values?.kills?.basic?.value   ?? 0);
     const deaths    = Math.round(e.values?.deaths?.basic?.value  ?? 0);
     const assists   = Math.round(e.values?.assists?.basic?.value ?? 0);
     const completed = e.values?.completed?.basic?.value === 1;
     const isMe      = e.player?.destinyUserInfo?.membershipId === state.membershipId;
-    const kd        = deaths > 0 ? (kills / deaths).toFixed(2) : kills.toFixed(2);
+    const kd        = (e.values?.killsDeathsRatio?.basic?.value ?? 0).toFixed(2);
     const status    = completed ? '✅' : '❌';
-    const line      = `${status} ${name}: ${kills}/${deaths}/${assists} (${kd} KD)`;
-    return isMe ? `**${line}**` : line;
-  });
+    const marker    = isMe ? ' ★' : '';
+
+    // Top 3 weapons by kills
+    const topWeapons = (e.extended?.weapons ?? [])
+      .sort((a, b) => (b.values?.uniqueWeaponKills?.basic?.value ?? 0) - (a.values?.uniqueWeaponKills?.basic?.value ?? 0))
+      .slice(0, 3);
+
+    const weaponLines = await Promise.all(topWeapons.map(async w => {
+      const wKills = w.values?.uniqueWeaponKills?.basic?.value ?? 0;
+      const def    = await getWeaponDef(w.referenceId).catch(() => null);
+      const wName  = def?.name ?? 'Unknown Weapon';
+      return `• ${wName}: ${wKills}`;
+    }));
+
+    return {
+      name:   `${status} ${name}${marker}: ${kills}/${deaths}/${assists} (${kd} KD)`,
+      value:  weaponLines.join('\n') || '• No weapon data',
+      inline: false,
+    };
+  }));
 
   const embed = new EmbedBuilder()
     .setColor(cleared ? 0x2ecc71 : 0xed4245)
     .setTitle(cleared ? `🏰 ${raidName} — Cleared!` : `🏰 ${raidName} — Not Completed`)
-    .setDescription(lines.join('\n'))
+    .addFields(...fields)
     .setTimestamp(new Date(pgcr.period));
 
   if (duration) embed.setFooter({ text: `Duration: ${duration}` });
