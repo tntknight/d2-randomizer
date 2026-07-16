@@ -99,6 +99,7 @@ async function poll(state) {
 // ── Raid result post ──────────────────────────────────────────────────────────
 
 async function postRaidResult(pgcr, state) {
+  console.log('[RaidWatcher] Full PGCR:', JSON.stringify(pgcr, null, 2));
   const entries  = pgcr.entries ?? [];
   const raidName = await getActivityName(pgcr.activityDetails?.referenceId, 'Raid').catch(() => 'Raid');
   const duration = entries[0]?.values?.activityDurationSeconds?.basic?.displayValue ?? null;
