@@ -36,12 +36,27 @@ export async function execute(interaction) {
   }
 
   console.log('[RaidDebug] activityDetails:', JSON.stringify(pgcr.activityDetails ?? {}));
+  console.log('[RaidDebug] period:', pgcr.period);
+  console.log('[RaidDebug] startingPhaseIndex:', pgcr.startingPhaseIndex);
+  console.log('[RaidDebug] activityWasStartedFromBeginning:', pgcr.activityWasStartedFromBeginning);
+
   for (const e of (pgcr.entries ?? [])) {
-    const name  = e.player?.destinyUserInfo?.displayName ?? 'Unknown';
-    const stats = Object.entries(e.values ?? {})
+    const name = e.player?.destinyUserInfo?.displayName ?? 'Unknown';
+
+    const values = Object.entries(e.values ?? {})
       .map(([k, v]) => `${k}=${v?.basic?.displayValue ?? v?.basic?.value}`)
       .join(', ');
-    console.log(`[RaidDebug] ${name}: ${stats}`);
+    console.log(`[RaidDebug] ${name} values: ${values}`);
+
+    const extValues = Object.entries(e.extended?.values ?? {})
+      .map(([k, v]) => `${k}=${v?.basic?.displayValue ?? v?.basic?.value}`)
+      .join(', ');
+    if (extValues) console.log(`[RaidDebug] ${name} extended.values: ${extValues}`);
+
+    const weapons = (e.extended?.weapons ?? []).map(w =>
+      `referenceId=${w.referenceId} kills=${w.values?.uniqueWeaponKills?.basic?.value} precision=${w.values?.uniqueWeaponPrecisionKills?.basic?.value}`
+    ).join(' | ');
+    if (weapons) console.log(`[RaidDebug] ${name} weapons: ${weapons}`);
   }
 
   await interaction.editReply({ content: `Done — check the Railway logs for instanceId \`${instanceId}\`.` });
