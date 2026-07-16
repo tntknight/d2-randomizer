@@ -38,9 +38,10 @@ import * as helpCmd           from './commands/help.js';
 import * as rollClassCmd      from './commands/rollClass.js';
 import * as raidWatchCmd      from './commands/raidWatch.js';
 import * as raidStopCmd       from './commands/raidStop.js';
-import * as raidDebugCmd      from './commands/raidDebug.js';
+import * as raidDebugCmd          from './commands/raidDebug.js';
+import * as verityAppearancesCmd  from './commands/verityAppearances.js';
 
-const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd]
+const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd, verityAppearancesCmd]
   .map(mod => mod.data.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);

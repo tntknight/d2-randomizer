@@ -38,5 +38,5 @@ export async function execute(interaction) {
 
   const isLast = session.currentEncounterIndex === session.raid.encounters.length - 1;
   const { embed } = buildEncounterEmbed(session);
-  await interaction.reply({ embeds: [embed], components: [buildEncounterRow(guildId, isLast)] });
+  await interaction.reply({ embeds: [embed], components: [buildEncounterRow(guildId, isLast, session.raid.encounters[session.currentEncounterIndex].name)] });
 }

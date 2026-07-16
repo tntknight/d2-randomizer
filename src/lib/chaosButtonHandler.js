@@ -2,6 +2,7 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'disc
 import chaosSession from './chaosSession.js';
 import { pickRandomRaid, shuffle } from './raidData.js';
 import { pickRandomDungeon } from './dungeonData.js';
+import { fetchEquippedAppearance } from './bungieEquipped.js';
 
 const CLASSES = ['Titan', 'Hunter', 'Warlock'];
 const CLASS_COLORS = { Titan: 0xe8a838, Hunter: 0x4a9eff, Warlock: 0x9b59b6 };
@@ -19,7 +20,8 @@ export async function handleChaosButton(interaction) {
     case 'keep-raid':   return handleKeepRaid(interaction, guildId);
     case 'reroll-raid': return handleRerollRaid(interaction, guildId);
     case 'next-enc':    return handleNextEnc(interaction, guildId);
-    case 'reroll-roles':return handleRerollRoles(interaction, guildId);
+    case 'reroll-roles':      return handleRerollRoles(interaction, guildId);
+    case 'show-appearances':  return handleShowAppearances(interaction, guildId);
     case 'quickroll':     return handleQuickRoll(interaction, guildId);
     case 'quickdungeon':  return handleQuickDungeon(interaction, guildId);
     default:
@@ -141,8 +143,8 @@ export function buildEncounterEmbed(session) {
   };
 }
 
-export function buildEncounterRow(guildId, isLast) {
-  return new ActionRowBuilder().addComponents(
+export function buildEncounterRow(guildId, isLast, encounterName = '') {
+  const buttons = [
     new ButtonBuilder()
       .setCustomId(`chaos:next-enc:${guildId}`)
       .setLabel(isLast ? 'Finish Raid' : 'Next Encounter')
@@ -151,7 +153,18 @@ export function buildEncounterRow(guildId, isLast) {
       .setCustomId(`chaos:reroll-roles:${guildId}`)
       .setLabel('Reroll Roles')
       .setStyle(ButtonStyle.Secondary),
-  );
+  ];
+
+  if (encounterName === 'Verity') {
+    buttons.push(
+      new ButtonBuilder()
+        .setCustomId(`chaos:show-appearances:${guildId}`)
+        .setLabel('Show Appearances')
+        .setStyle(ButtonStyle.Secondary),
+    );
+  }
+
+  return new ActionRowBuilder().addComponents(...buttons);
 }
 
 // ── Handlers ─────────────────────────────────────────────────────────────────
@@ -258,7 +271,7 @@ async function handleKeepRaid(interaction, guildId) {
 
   const isLast = session.raid.encounters.length === 1;
   const { embed } = buildEncounterEmbed(session);
-  await interaction.update({ embeds: [embed], components: [buildEncounterRow(guildId, isLast)] });
+  await interaction.update({ embeds: [embed], components: [buildEncounterRow(guildId, isLast, session.raid.encounters[0].name)] });
 }
 
 async function handleRerollRaid(interaction, guildId) {
@@ -310,7 +323,7 @@ async function handleNextEnc(interaction, guildId) {
 
   const isLast = nextIndex === session.raid.encounters.length - 1;
   const { embed } = buildEncounterEmbed(session);
-  await interaction.update({ embeds: [embed], components: [buildEncounterRow(guildId, isLast)] });
+  await interaction.update({ embeds: [embed], components: [buildEncounterRow(guildId, isLast, session.raid.encounters[nextIndex].name)] });
 }
 
 async function handleRerollRoles(interaction, guildId) {
@@ -327,7 +340,45 @@ async function handleRerollRoles(interaction, guildId) {
 
   const isLast = session.currentEncounterIndex === session.raid.encounters.length - 1;
   const { embed } = buildEncounterEmbed(session);
-  await interaction.update({ embeds: [embed], components: [buildEncounterRow(guildId, isLast)] });
+  await interaction.update({ embeds: [embed], components: [buildEncounterRow(guildId, isLast, session.raid.encounters[session.currentEncounterIndex].name)] });
+}
+
+async function handleShowAppearances(interaction, guildId) {
+  const session = chaosSession.get(guildId);
+  if (!session) return interaction.reply({ content: 'Session expired.', ephemeral: true });
+
+  await interaction.deferReply();
+
+  const linkOrName = (item) => item.iconUrl ? `[${item.name}](${item.iconUrl})` : item.name;
+
+  const embeds = await Promise.all(session.players.map(async (p) => {
+    try {
+      const a = await fetchEquippedAppearance(p.userId);
+      return new EmbedBuilder()
+        .setColor(0x9b59b6)
+        .setTitle(p.username)
+        .setThumbnail(a.ghost.iconUrl)
+        .addFields(
+          { name: 'Ghost',      value: linkOrName(a.ghost),     inline: true },
+          { name: 'Helmet',     value: linkOrName(a.helmet),    inline: true },
+          { name: 'Arms',       value: linkOrName(a.gauntlets), inline: true },
+          { name: 'Chest',      value: linkOrName(a.chest),     inline: true },
+          { name: 'Legs',       value: linkOrName(a.legs),      inline: true },
+          { name: 'Class Item', value: linkOrName(a.classItem), inline: true },
+        );
+    } catch (err) {
+      return new EmbedBuilder()
+        .setColor(0x95a5a6)
+        .setTitle(p.username)
+        .setDescription(
+          err.message === 'no-link'
+            ? 'Bungie account not linked — run `/link-account` to connect.'
+            : 'Could not fetch appearance data.'
+        );
+    }
+  }));
+
+  await interaction.editReply({ embeds });
 }
 
 async function handleQuickRoll(interaction, guildId) {
