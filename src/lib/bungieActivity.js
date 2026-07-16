@@ -20,6 +20,17 @@ export async function getMostRecentCharacterClass(membershipType, membershipId) 
   return chars[0].classType ?? null;
 }
 
+// Returns the most recent activity for one character filtered by mode, or null.
+export async function getLatestActivityByMode(membershipType, membershipId, characterId, mode) {
+  const res  = await fetch(
+    `${BASE}/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=1&page=0`,
+    { headers: apiHeaders() }
+  );
+  const json = await res.json();
+  if (json.ErrorCode !== 1) return null;
+  return json.Response?.activities?.[0] ?? null;
+}
+
 // Returns the single most recent activity for one character (any mode), or null.
 // We use mode=0 (no filter) so private matches (mode 32) are included alongside
 // public PvP (mode 5). The caller filters non-PvP via the PGCR teams field.

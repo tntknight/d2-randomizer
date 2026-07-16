@@ -38,8 +38,9 @@ import * as helpCmd           from './commands/help.js';
 import * as rollClassCmd      from './commands/rollClass.js';
 import * as raidWatchCmd      from './commands/raidWatch.js';
 import * as raidStopCmd       from './commands/raidStop.js';
+import * as raidDebugCmd      from './commands/raidDebug.js';
 
-const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd]
+const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd]
   .map(mod => mod.data.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
