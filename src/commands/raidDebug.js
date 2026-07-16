@@ -1,10 +1,11 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { getTokens, isLinked } from '../auth/tokenStore.js';
 import { getCharacterIds, getLatestActivityByMode, getPGCR } from '../lib/bungieActivity.js';
+import { postRaidResult } from '../lib/raidWatcher.js';
 
 export const data = new SlashCommandBuilder()
   .setName('raid-debug')
-  .setDescription('Fetch your most recent raid PGCR and print it to the terminal');
+  .setDescription('Fetch your most recent raid and post the results embed');
 
 export async function execute(interaction) {
   if (!isLinked(interaction.user.id)) {
@@ -13,51 +14,25 @@ export async function execute(interaction) {
 
   await interaction.deferReply({ ephemeral: true });
 
-  const { membershipType, membershipId } = getTokens(interaction.user.id);
+  const tokens = getTokens(interaction.user.id);
+  const { membershipType, membershipId, displayName } = tokens;
   const characterIds = await getCharacterIds(membershipType, membershipId);
 
   let activity = null;
-  let foundChar = null;
   for (const charId of characterIds) {
     const act = await getLatestActivityByMode(membershipType, membershipId, charId, 4);
-    if (act) { activity = act; foundChar = charId; break; }
+    if (act) { activity = act; break; }
   }
 
   if (!activity) {
     return interaction.editReply({ content: 'No recent raid activity found.' });
   }
 
-  const instanceId = activity.activityDetails.instanceId;
-  console.log(`[RaidDebug] Found raid instanceId=${instanceId} on char=${foundChar}`);
-
-  const pgcr = await getPGCR(instanceId);
+  const pgcr = await getPGCR(activity.activityDetails.instanceId);
   if (!pgcr) {
-    return interaction.editReply({ content: `Found instanceId ${instanceId} but PGCR is not ready yet.` });
+    return interaction.editReply({ content: 'PGCR not ready yet — try again in a moment.' });
   }
 
-  console.log('[RaidDebug] activityDetails:', JSON.stringify(pgcr.activityDetails ?? {}));
-  console.log('[RaidDebug] period:', pgcr.period);
-  console.log('[RaidDebug] startingPhaseIndex:', pgcr.startingPhaseIndex);
-  console.log('[RaidDebug] activityWasStartedFromBeginning:', pgcr.activityWasStartedFromBeginning);
-
-  for (const e of (pgcr.entries ?? [])) {
-    const name = e.player?.destinyUserInfo?.displayName ?? 'Unknown';
-
-    const values = Object.entries(e.values ?? {})
-      .map(([k, v]) => `${k}=${v?.basic?.displayValue ?? v?.basic?.value}`)
-      .join(', ');
-    console.log(`[RaidDebug] ${name} values: ${values}`);
-
-    const extValues = Object.entries(e.extended?.values ?? {})
-      .map(([k, v]) => `${k}=${v?.basic?.displayValue ?? v?.basic?.value}`)
-      .join(', ');
-    if (extValues) console.log(`[RaidDebug] ${name} extended.values: ${extValues}`);
-
-    const weapons = (e.extended?.weapons ?? []).map(w =>
-      `referenceId=${w.referenceId} kills=${w.values?.uniqueWeaponKills?.basic?.value} precision=${w.values?.uniqueWeaponPrecisionKills?.basic?.value}`
-    ).join(' | ');
-    if (weapons) console.log(`[RaidDebug] ${name} weapons: ${weapons}`);
-  }
-
-  await interaction.editReply({ content: `Done — check the Railway logs for instanceId \`${instanceId}\`.` });
+  await postRaidResult(pgcr, { membershipId, displayName, channel: interaction.channel });
+  await interaction.editReply({ content: 'Done.' });
 }

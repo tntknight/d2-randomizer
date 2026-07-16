@@ -99,7 +99,7 @@ async function poll(state) {
 
 // ── Raid result post ──────────────────────────────────────────────────────────
 
-async function postRaidResult(pgcr, state) {
+export async function postRaidResult(pgcr, state) {
   const entries  = pgcr.entries ?? [];
   const raidName = await getActivityName(pgcr.activityDetails?.referenceId, 'Raid').catch(() => 'Raid');
   const duration = entries[0]?.values?.activityDurationSeconds?.basic?.displayValue ?? null;
