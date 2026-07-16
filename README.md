@@ -15,6 +15,15 @@ Players can either upload a [DIM](https://app.destinyitemmanager.com/) CSV expor
 3. `/compare-loadout` picks a random weapon for each slot from that shared pool
 4. The result includes a DIM search string so you can quickly find the weapons in-game
 
+### Guided Raids
+
+1. A player runs `/raid-start <raid>` and picks which raid to run from the list of all 9 raids
+2. The bot opens a lobby — up to 6 players can join by clicking the **Join** button
+3. The raid watcher starts automatically for the host (requires a linked Bungie account)
+4. Once the host presses **Begin**, the first encounter is shown with randomly assigned roles
+5. The host presses **Next Encounter** to advance through each encounter; roles reshuffle every time
+6. Guide images can be added per-encounter by setting `imageUrl` in `raidData.js`
+
 ### Chaos Raids
 
 1. A player runs `/chaos-start` to open a lobby — up to 6 players can join by clicking the **Join** button
@@ -34,6 +43,16 @@ Same flow as Chaos Raids but capped at 3 players and pulls from the dungeon pool
 ## Commands
 
 All commands are available as both slash commands (`/command`) and prefix commands (`!command`). Prefix commands work immediately; slash commands can take up to an hour to appear in a new server.
+
+### Guided Raids
+
+| Command | Description |
+|---|---|
+| `/raid-start <raid>` | Pick a raid and open a guided lobby (up to 6 players). Automatically starts the raid watcher for the host. |
+
+Players join via the **Join** button; the host presses **Begin** when ready. The bot then walks through every encounter in order — each time showing randomly assigned roles and an optional guide image. **Next Encounter** advances the session; the last encounter shows **Finish Raid** instead.
+
+To add guide images: open `src/lib/raidData.js`, find the encounter, and set `imageUrl` to a direct image URL.
 
 ### Chaos Raids
 
@@ -203,6 +222,7 @@ src/
     pvpStop.js            # /pvp-stop — stop watching
     srlWatch.js           # /srl-watch — start watching for SRL race completions
     srlStop.js            # /srl-stop — stop watching
+    raidStart.js          # /raid-start — open a Guided Raid lobby with chosen raid
     chaosStart.js         # /chaos-start — open a Chaos Raid lobby
     chaosBegin.js         # /chaos-begin — close lobby and start class opt-in
     chaosClass.js         # /chaos-class — record class preference
@@ -230,6 +250,8 @@ src/
     dungeonData.js        # All dungeons, encounters, and per-encounter role lists
     chaosSession.js       # In-memory per-guild session state for raids and dungeons (3-hr TTL)
     chaosButtonHandler.js # Dispatches chaos: button interactions; shared embed builders
+    guidedSession.js      # In-memory per-guild session state for guided raids (3-hr TTL)
+    guidedButtonHandler.js # Dispatches guided: button interactions; lobby and encounter embed builders
   auth/
     bungieOAuth.js        # OAuth URL builder, token exchange, token refresh
     tokenStore.js         # Persists Bungie tokens to data/tokens.json

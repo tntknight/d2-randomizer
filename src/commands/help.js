@@ -52,6 +52,16 @@ export async function execute(interaction) {
           ].join('\n'),
         },
         {
+          name: '🗺️ Guided Raids',
+          value: [
+            '`/raid-start <raid>` — Pick a raid and open a lobby (up to 6 players). Automatically starts the raid watcher for the host.',
+            '> Players join via the **Join** button; host presses **Begin** when ready.',
+            '> The bot shows each encounter in order with randomly assigned roles and (optionally) a guide image.',
+            '> Host presses **Next Encounter** to advance; last encounter shows **Finish Raid**.',
+            '> Add encounter guide images by setting `imageUrl` in `raidData.js`.',
+          ].join('\n'),
+        },
+        {
           name: '💥 Chaos Raids',
           value: [
             '`/chaos-start` — Open a Chaos Raid lobby (up to 6 players can join via button)',

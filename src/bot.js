@@ -38,6 +38,8 @@ import * as raidWatchCmd      from './commands/raidWatch.js';
 import * as raidStopCmd       from './commands/raidStop.js';
 import * as raidDebugCmd      from './commands/raidDebug.js';
 import { handleChaosButton }  from './lib/chaosButtonHandler.js';
+import * as raidStartCmd      from './commands/raidStart.js';
+import { handleGuidedButton } from './lib/guidedButtonHandler.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
@@ -49,6 +51,7 @@ const commandModules = [
   chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd,
   dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd,
   helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd,
+  raidStartCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
@@ -82,6 +85,11 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.customId.startsWith('chaos:')) {
     await handleChaosButton(interaction);
+    return;
+  }
+
+  if (interaction.customId.startsWith('guided:')) {
+    await handleGuidedButton(interaction);
     return;
   }
 
