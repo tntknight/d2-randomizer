@@ -99,7 +99,12 @@ async function poll(state) {
 // ── Raid result post ──────────────────────────────────────────────────────────
 
 async function postRaidResult(pgcr, state) {
-  console.log('[RaidWatcher] Full PGCR:', JSON.stringify(pgcr, null, 2));
+  console.log('[RaidWatcher] activityDetails:', JSON.stringify(pgcr.activityDetails ?? {}));
+  for (const e of (pgcr.entries ?? [])) {
+    const name  = e.player?.destinyUserInfo?.displayName ?? 'Unknown';
+    const stats = Object.entries(e.values ?? {}).map(([k, v]) => `${k}=${v?.basic?.displayValue ?? v?.basic?.value}`).join(', ');
+    console.log(`[RaidWatcher] ${name}: ${stats}`);
+  }
   const entries  = pgcr.entries ?? [];
   const raidName = await getActivityName(pgcr.activityDetails?.referenceId, 'Raid').catch(() => 'Raid');
   const duration = entries[0]?.values?.activityDurationSeconds?.basic?.displayValue ?? null;
