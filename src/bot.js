@@ -45,6 +45,7 @@ import { handleGuidedButton } from './lib/guidedButtonHandler.js';
 import { handleHelpButton }   from './commands/help.js';
 import * as pvpRandomStartCmd from './commands/pvpRandomStart.js';
 import * as pvpRandomStopCmd  from './commands/pvpRandomStop.js';
+import * as pvpRandomKickCmd  from './commands/pvpRandomKick.js';
 import { handlePvpRandomButton } from './lib/pvpRandomButtonHandler.js';
 
 const commandModules = [
@@ -58,7 +59,7 @@ const commandModules = [
   dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd,
   helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd,
   raidStartCmd, verityAppearancesCmd, mapDebugCmd,
-  pvpRandomStartCmd, pvpRandomStopCmd,
+  pvpRandomStartCmd, pvpRandomStopCmd, pvpRandomKickCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────

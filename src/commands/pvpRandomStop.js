@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import pvpRandomSession from '../lib/pvpRandomSession.js';
+import { stopWatching } from '../lib/pvpRandomWatcher.js';
 
 export const data = new SlashCommandBuilder()
   .setName('pvp-random-stop')
@@ -16,6 +17,7 @@ export async function execute(interaction) {
     return interaction.reply({ content: 'Only the host can end the lobby.', ephemeral: true });
   }
 
+  stopWatching(guildId);
   pvpRandomSession.clear(guildId);
   await interaction.reply({ content: '✅ pvp-random lobby ended.', ephemeral: true });
 }

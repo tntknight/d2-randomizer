@@ -45,7 +45,9 @@ Same flow as Chaos Raids but capped at 3 players and pulls from the dungeon pool
 3. Weapons that get rolled are added to a per-session exclusion list, so future rolls in the same lobby won't repeat them
 4. The host presses **Roll Map** at any time to pick a random PvP map
 5. The result embed also shows stats on the shared pool — total common weapons, how many are exotic, and how many have been excluded so far
-6. `/pvp-random-stop` ends the lobby early *(host only)*
+6. If the host has a linked Bungie account, the bot automatically watches the host's PvP matches for the life of the lobby. After each match it ranks every participant by individual score, awards points to whichever ranked players are in the lobby (1st place: 6 points, 2nd: 5, down to 6th: 1 — 7th and below score 0), and posts a running **🏆 Rankings** leaderboard in the lobby embed
+7. `/pvp-random-kick <player>` removes a specific player from the lobby *(host only)*
+8. `/pvp-random-stop` ends the lobby early *(host only)*
 
 ---
 
@@ -126,9 +128,12 @@ The **Pull to Inventory** button on `/random-exotic` results transfers the exoti
 | Command | Description |
 |---|---|
 | `/pvp-random` | Open a PvP random loadout lobby (up to 12 players) |
+| `/pvp-random-kick <player>` | Remove a player from the lobby *(host only)* |
 | `/pvp-random-stop` | End the lobby *(host only)* |
 
 Players **Join**/**Leave** at any time. The host presses **Roll Loadout** *(host only, 2+ players)* to pull every joined player's vault and roll a shared loadout — already-rolled weapons are excluded from later rolls in the same lobby. The host presses **Roll Map** *(host only)* to pick a random PvP map.
+
+If the host is linked, match-ranking starts automatically: the bot watches the host's PvP matches and, after each one, awards points based on individual placement (1st: 6, 2nd: 5, 3rd: 4, 4th: 3, 5th: 2, 6th: 1, 7th+: 0) to whichever ranked players are in the lobby. Standings accumulate in the lobby embed's **🏆 Rankings** field for the life of the session.
 
 ### PvP & SRL watching
 
@@ -253,6 +258,7 @@ src/
     dungeonRoles.js       # /dungeon-roles — reroll roles for current dungeon encounter
     pvpRandomStart.js     # /pvp-random — open a PvP random loadout lobby
     pvpRandomStop.js      # /pvp-random-stop — end the lobby (host only)
+    pvpRandomKick.js      # /pvp-random-kick — remove a player from the lobby (host only)
   lib/
     sessionStore.js       # In-memory per-server weapon pool
     csvParser.js          # Parses DIM CSV exports
@@ -273,7 +279,9 @@ src/
     guidedSession.js      # In-memory per-guild session state for guided raids (3-hr TTL)
     guidedButtonHandler.js # Dispatches guided: button interactions; lobby and encounter embed builders
     pvpRandomSession.js    # In-memory per-guild session state for PvP Random lobbies (3-hr TTL)
-    pvpRandomButtonHandler.js # Dispatches pvpr: button interactions; shared lobby/loadout/map embed builder
+    pvpRandomView.js       # Builds the pvp-random lobby message (embeds, buttons, DIM search content)
+    pvpRandomButtonHandler.js # Dispatches pvpr: button interactions (join/leave/roll loadout/roll map)
+    pvpRandomWatcher.js    # Watches the host's PvP matches per guild; awards ranking points after each match
   auth/
     bungieOAuth.js        # OAuth URL builder, token exchange, token refresh
     tokenStore.js         # Persists Bungie tokens to data/tokens.json

@@ -131,16 +131,18 @@ const PAGES = [
         name: '🔫 PvP Random',
         value: [
           '`/pvp-random` — Open a lobby (up to 12 players)',
+          '`/pvp-random-kick <player>` — Remove a player from the lobby *(host only)*',
           '`/pvp-random-stop` — End the lobby *(host only)*',
           '> Players **Join**/**Leave** anytime — no lock, no minimum to stay in',
           '> Host presses **Roll Loadout** (2+ players) to freshly pull every joined player\'s vault and roll a Kinetic/Energy/Power loadout everyone owns in common',
           '> Weapons already rolled are excluded from future rolls this session, so repeats won\'t come up',
           '> Host presses **Roll Map** anytime to pick a random PvP map',
           '> Results show per-slot weapon embeds, a DIM search string, and stats on the shared pool (total/exotic counts, excluded count)',
+          '> If the host is linked, the bot auto-watches their matches and posts a 🏆 Rankings leaderboard — 1st place scores 6 points, 2nd 5, down to 6th at 1 (ranked by individual score each match)',
         ].join('\n'),
       },
     )
-    .setFooter({ text: 'Bungie account required for everyone in the lobby to Roll Loadout' }),
+    .setFooter({ text: 'Bungie account required for everyone in the lobby to Roll Loadout, and for the host to enable Rankings' }),
 ];
 
 function buildRow(page, userId) {

@@ -23,6 +23,8 @@ function create(guildId, hostId, channelId) {
     lastLoadout:    null,
     lastStats:      null,
     lastMap:        null,
+    rankings:       {},    // userId -> { username, points, matches }
+    rankingsActive: false, // whether the host's activity is currently being watched
     lastActivity:   Date.now(),
   };
   sessions.set(guildId, session);
