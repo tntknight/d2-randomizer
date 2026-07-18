@@ -42,6 +42,7 @@ import * as verityAppearancesCmd  from './commands/verityAppearances.js';
 import { handleChaosButton }  from './lib/chaosButtonHandler.js';
 import * as raidStartCmd      from './commands/raidStart.js';
 import { handleGuidedButton } from './lib/guidedButtonHandler.js';
+import { handleHelpButton }   from './commands/help.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
@@ -88,6 +89,11 @@ client.once('ready', () => {
 // ── Button handler ────────────────────────────────────────────────────────────
 client.on('interactionCreate', async interaction => {
   if (!interaction.isButton()) return;
+
+  if (interaction.customId.startsWith('help:')) {
+    await handleHelpButton(interaction);
+    return;
+  }
 
   if (interaction.customId.startsWith('chaos:')) {
     await handleChaosButton(interaction);
