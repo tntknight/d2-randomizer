@@ -6,9 +6,6 @@ export function buildAuthUrl(state) {
     client_id:     process.env.BUNGIE_CLIENT_ID,
     response_type: 'code',
     state,
-    // 32 = MoveEquipDestinyItems (required for TransferItem)
-    // 64 = ReadDestinyInventoryAndVault
-    scope: '96',
   });
   return `${BUNGIE_BASE}/en/oauth/authorize?${params}`;
 }
