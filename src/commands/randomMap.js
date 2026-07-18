@@ -24,7 +24,7 @@ export const MAPS = [
   { name: 'Exodus Blue',         image: "exodus_blue.jpg" },
   { name: 'The Fortress',        image: "the_fortress.jpg" },
   { name: 'Fragment',            image: "Fragment.jpg" },
-  { name: 'Firebase Echo',       image: "FireBase_Echo.webp" },
+  //{ name: 'Firebase Echo',       image: "FireBase_Echo.webp" },
   { name: 'Javelin-4',           image: "Javelin-4.webp" },
   { name: "Midtown",             image: "midtown.webp" },
   { name: 'Meltdown',            image: "Meltdown.webp" },
