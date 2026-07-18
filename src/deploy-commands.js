@@ -40,8 +40,10 @@ import * as raidWatchCmd      from './commands/raidWatch.js';
 import * as raidStopCmd       from './commands/raidStop.js';
 import * as raidDebugCmd          from './commands/raidDebug.js';
 import * as verityAppearancesCmd  from './commands/verityAppearances.js';
+import * as pvpRandomStartCmd from './commands/pvpRandomStart.js';
+import * as pvpRandomStopCmd  from './commands/pvpRandomStop.js';
 
-const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd, verityAppearancesCmd]
+const commands = [addCmd, listCmd, loadoutCmd, clearCmd, dropCmd, linkAccountCmd, loadVaultCmd, randomMapCmd, pvpWatchCmd, pvpStopCmd, srlWatchCmd, srlStopCmd, randomExoticCmd, randomLoadoutCmd, chaosStartCmd, chaosBeginCmd, chaosClassCmd, chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd, dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd, helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd, verityAppearancesCmd, pvpRandomStartCmd, pvpRandomStopCmd]
   .map(mod => mod.data.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);

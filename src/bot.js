@@ -43,6 +43,9 @@ import { handleChaosButton }  from './lib/chaosButtonHandler.js';
 import * as raidStartCmd      from './commands/raidStart.js';
 import { handleGuidedButton } from './lib/guidedButtonHandler.js';
 import { handleHelpButton }   from './commands/help.js';
+import * as pvpRandomStartCmd from './commands/pvpRandomStart.js';
+import * as pvpRandomStopCmd  from './commands/pvpRandomStop.js';
+import { handlePvpRandomButton } from './lib/pvpRandomButtonHandler.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
@@ -55,6 +58,7 @@ const commandModules = [
   dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd,
   helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd,
   raidStartCmd, verityAppearancesCmd, mapDebugCmd,
+  pvpRandomStartCmd, pvpRandomStopCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
@@ -102,6 +106,11 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.customId.startsWith('guided:')) {
     await handleGuidedButton(interaction);
+    return;
+  }
+
+  if (interaction.customId.startsWith('pvpr:')) {
+    await handlePvpRandomButton(interaction);
     return;
   }
 
