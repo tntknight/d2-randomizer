@@ -5,7 +5,7 @@ const COLOR = 0x1a1d26;
 const PAGES = [
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Account & Weapons (1/5)')
+    .setTitle('D2 Randomizer — Account & Weapons (1/6)')
     .setDescription('All commands work as `/slash` or `!prefix`.')
     .addFields(
       {
@@ -29,7 +29,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Random Tools (2/5)')
+    .setTitle('D2 Randomizer — Random Tools (2/6)')
     .addFields(
       {
         name: '🎯 Random Rolls',
@@ -44,7 +44,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Activity Watchers (3/5)')
+    .setTitle('D2 Randomizer — Activity Watchers (3/6)')
     .setDescription('All watchers poll the Bungie API every 30 seconds. Requires a linked account. Resets on bot restart.')
     .addFields(
       {
@@ -73,7 +73,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Guided Raids (4/5)')
+    .setTitle('D2 Randomizer — Guided Raids (4/6)')
     .addFields(
       {
         name: '🗺️ Guided Raids',
@@ -95,7 +95,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Chaos Activities (5/5)')
+    .setTitle('D2 Randomizer — Chaos Activities (5/6)')
     .setDescription('`/chaos-begin` and `/chaos-class` are shared between Chaos Raids and Chaos Dungeons.')
     .addFields(
       {
@@ -122,6 +122,25 @@ const PAGES = [
       },
     )
     .setFooter({ text: 'Bungie account required for: load-vault, random-loadout, random-exotic, pvp-watch, srl-watch, raid-watch' }),
+
+  new EmbedBuilder()
+    .setColor(COLOR)
+    .setTitle('D2 Randomizer — PvP Random (6/6)')
+    .addFields(
+      {
+        name: '🔫 PvP Random',
+        value: [
+          '`/pvp-random` — Open a lobby (up to 12 players)',
+          '`/pvp-random-stop` — End the lobby *(host only)*',
+          '> Players **Join**/**Leave** anytime — no lock, no minimum to stay in',
+          '> Host presses **Roll Loadout** (2+ players) to freshly pull every joined player\'s vault and roll a Kinetic/Energy/Power loadout everyone owns in common',
+          '> Weapons already rolled are excluded from future rolls this session, so repeats won\'t come up',
+          '> Host presses **Roll Map** anytime to pick a random PvP map',
+          '> Results show per-slot weapon embeds, a DIM search string, and stats on the shared pool (total/exotic counts, excluded count)',
+        ].join('\n'),
+      },
+    )
+    .setFooter({ text: 'Bungie account required for everyone in the lobby to Roll Loadout' }),
 ];
 
 function buildRow(page, userId) {

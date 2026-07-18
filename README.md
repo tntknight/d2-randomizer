@@ -38,6 +38,15 @@ Players can either upload a [DIM](https://app.destinyitemmanager.com/) CSV expor
 
 Same flow as Chaos Raids but capped at 3 players and pulls from the dungeon pool instead. Use `/dungeon-start` to open a dungeon lobby.
 
+### PvP Random
+
+1. A player runs `/pvp-random` to open a lobby — up to 12 players can join or leave at any time via the **Join**/**Leave** buttons
+2. The host presses **Roll Loadout** (requires at least 2 players) — the bot freshly fetches every joined player's vault and rolls a Kinetic/Energy/Power loadout from weapons **everyone owns in common**
+3. Weapons that get rolled are added to a per-session exclusion list, so future rolls in the same lobby won't repeat them
+4. The host presses **Roll Map** at any time to pick a random PvP map
+5. The result embed also shows stats on the shared pool — total common weapons, how many are exotic, and how many have been excluded so far
+6. `/pvp-random-stop` ends the lobby early *(host only)*
+
 ---
 
 ## Commands
@@ -111,6 +120,15 @@ To add guide images: open `src/lib/raidData.js`, find the encounter, and set `im
 | `/roll-class` | Roll a random Destiny 2 class (Titan / Hunter / Warlock) |
 
 The **Pull to Inventory** button on `/random-exotic` results transfers the exotic from your vault or another character to your active character (requires a linked Bungie account).
+
+### PvP Random
+
+| Command | Description |
+|---|---|
+| `/pvp-random` | Open a PvP random loadout lobby (up to 12 players) |
+| `/pvp-random-stop` | End the lobby *(host only)* |
+
+Players **Join**/**Leave** at any time. The host presses **Roll Loadout** *(host only, 2+ players)* to pull every joined player's vault and roll a shared loadout — already-rolled weapons are excluded from later rolls in the same lobby. The host presses **Roll Map** *(host only)* to pick a random PvP map.
 
 ### PvP & SRL watching
 
@@ -233,6 +251,8 @@ src/
     dungeonRoll.js        # /dungeon — roll a random dungeon
     dungeonEncounter.js   # /dungeon-encounter — show dungeon encounter with role assignments
     dungeonRoles.js       # /dungeon-roles — reroll roles for current dungeon encounter
+    pvpRandomStart.js     # /pvp-random — open a PvP random loadout lobby
+    pvpRandomStop.js      # /pvp-random-stop — end the lobby (host only)
   lib/
     sessionStore.js       # In-memory per-server weapon pool
     csvParser.js          # Parses DIM CSV exports
@@ -252,6 +272,8 @@ src/
     chaosButtonHandler.js # Dispatches chaos: button interactions; shared embed builders
     guidedSession.js      # In-memory per-guild session state for guided raids (3-hr TTL)
     guidedButtonHandler.js # Dispatches guided: button interactions; lobby and encounter embed builders
+    pvpRandomSession.js    # In-memory per-guild session state for PvP Random lobbies (3-hr TTL)
+    pvpRandomButtonHandler.js # Dispatches pvpr: button interactions; shared lobby/loadout/map embed builder
   auth/
     bungieOAuth.js        # OAuth URL builder, token exchange, token refresh
     tokenStore.js         # Persists Bungie tokens to data/tokens.json
