@@ -37,6 +37,7 @@ import * as rollClassCmd      from './commands/rollClass.js';
 import * as raidWatchCmd      from './commands/raidWatch.js';
 import * as raidStopCmd       from './commands/raidStop.js';
 import * as raidDebugCmd          from './commands/raidDebug.js';
+import * as mapDebugCmd           from './commands/mapDebug.js';
 import * as verityAppearancesCmd  from './commands/verityAppearances.js';
 import { handleChaosButton }  from './lib/chaosButtonHandler.js';
 import * as raidStartCmd      from './commands/raidStart.js';
@@ -52,7 +53,7 @@ const commandModules = [
   chaosRaidCmd, chaosEncounterCmd, chaosRolesCmd,
   dungeonStartCmd, dungeonRollCmd, dungeonEncounterCmd, dungeonRolesCmd,
   helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd,
-  raidStartCmd, verityAppearancesCmd,
+  raidStartCmd, verityAppearancesCmd, mapDebugCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
