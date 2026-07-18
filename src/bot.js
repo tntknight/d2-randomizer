@@ -79,6 +79,10 @@ startCallbackServer();
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
   preloadManifest();
+  client.user.setPresence({
+    activities: [{ name: '/link-account', type: 2 }],
+    status: 'online',
+  });
 });
 
 // ── Button handler ────────────────────────────────────────────────────────────
