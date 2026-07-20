@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { fetchEquippedAppearance } from '../lib/bungieEquipped.js';
-import { buildStackedIconImage } from '../lib/armorImage.js';
+import { buildPlayerGridImage } from '../lib/armorImage.js';
 
 export const data = new SlashCommandBuilder()
   .setName('verity-appearances')
@@ -19,8 +19,6 @@ export async function execute(interaction) {
 
   await interaction.deferReply();
 
-  const linkOrName = (item) => item.iconUrl ? `[${item.name}](${item.iconUrl})` : item.name;
-
   try {
     const results = await Promise.all(users.map(async (user) => {
       const displayName = interaction.guild
@@ -29,49 +27,41 @@ export async function execute(interaction) {
 
       try {
         const a = await fetchEquippedAppearance(user.id);
-        const order = [a.ghost, a.helmet, a.gauntlets, a.chest, a.legs, a.classItem];
-        const imageBuffer = await buildStackedIconImage(order);
-
-        const embed = new EmbedBuilder()
-          .setColor(0x9b59b6)
-          .setTitle(displayName)
-          .setDescription('Top to bottom: Ghost, Helmet, Arms, Chest, Legs, Class Item')
-          .addFields(
-            { name: 'Ghost',      value: linkOrName(a.ghost),     inline: true },
-            { name: 'Helmet',     value: linkOrName(a.helmet),    inline: true },
-            { name: 'Arms',       value: linkOrName(a.gauntlets), inline: true },
-            { name: 'Chest',      value: linkOrName(a.chest),     inline: true },
-            { name: 'Legs',       value: linkOrName(a.legs),      inline: true },
-            { name: 'Class Item', value: linkOrName(a.classItem), inline: true },
-          );
-
-        let file = null;
-        if (imageBuffer) {
-          const filename = `armor-${user.id}.png`;
-          file = new AttachmentBuilder(imageBuffer, { name: filename });
-          embed.setImage(`attachment://${filename}`);
-        }
-
-        return { embed, file };
+        const items = [a.ghost, a.helmet, a.gauntlets, a.chest, a.legs, a.classItem];
+        return { name: displayName, items, error: null };
       } catch (err) {
         return {
-          embed: new EmbedBuilder()
-            .setColor(0x95a5a6)
-            .setTitle(displayName)
-            .setDescription(
-              err.message === 'no-link'
-                ? 'Bungie account not linked — run `/link-account` to connect.'
-                : 'Could not fetch appearance data.'
-            ),
-          file: null,
+          name: displayName,
+          items: null,
+          error: err.message === 'no-link'
+            ? 'Bungie account not linked — run `/link-account` to connect.'
+            : 'Could not fetch appearance data.',
         };
       }
     }));
 
-    await interaction.editReply({
-      embeds: results.map(r => r.embed),
-      files: results.map(r => r.file).filter(Boolean),
-    });
+    const players = results.filter(r => r.items);
+    const failed = results.filter(r => !r.items);
+
+    const embed = new EmbedBuilder()
+      .setColor(0x9b59b6)
+      .setTitle('Verity Appearances')
+      .setDescription(
+        'Rows top to bottom: Ghost, Helmet, Arms, Chest, Legs, Class Item'
+        + (failed.length ? `\n\n${failed.map(f => `⚠️ **${f.name}** — ${f.error}`).join('\n')}` : '')
+      );
+
+    const files = [];
+    if (players.length > 0) {
+      const imageBuffer = await buildPlayerGridImage(players);
+      if (imageBuffer) {
+        const filename = 'verity-appearances.png';
+        files.push(new AttachmentBuilder(imageBuffer, { name: filename }));
+        embed.setImage(`attachment://${filename}`);
+      }
+    }
+
+    await interaction.editReply({ embeds: [embed], files });
   } catch (err) {
     console.error('[verity-appearances] Error:', err);
     await interaction.editReply({ content: 'Failed to fetch appearance data. Try again in a moment.' });
