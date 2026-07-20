@@ -14,10 +14,10 @@ GlobalFonts.registerFromPath(
 );
 
 const ICON_SIZE = 192;
-const FONT_SIZE = 96;
-const LABEL_HEIGHT = 140;
-const LABEL_H_PADDING = 24;
-const MAX_COLUMN_WIDTH = 640;
+const FONT_SIZE = 48;
+const LABEL_HEIGHT = 70;
+const LABEL_H_PADDING = 20;
+const MAX_COLUMN_WIDTH = 400;
 const COLUMN_GAP = 24;
 const BG = { r: 35, g: 39, b: 42, alpha: 1 };
 const FONT = `bold ${FONT_SIZE}px "${FONT_FAMILY}"`;

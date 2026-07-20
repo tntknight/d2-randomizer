@@ -21,9 +21,10 @@ export async function execute(interaction) {
 
   try {
     const results = await Promise.all(users.map(async (user) => {
-      const displayName = interaction.guild
+      const rawName = interaction.guild
         ? (await interaction.guild.members.fetch(user.id).catch(() => null))?.displayName ?? user.username
         : user.username;
+      const displayName = rawName.split('#')[0];
 
       try {
         const a = await fetchEquippedAppearance(user.id);
