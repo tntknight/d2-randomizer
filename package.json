@@ -4,6 +4,9 @@
   "description": "Destiny 2 weapon comparison Discord bot",
   "type": "module",
   "main": "src/bot.js",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "start": "node src/bot.js",
     "dev": "nodemon src/bot.js",
