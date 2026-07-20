@@ -1,5 +1,6 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { fetchEquippedAppearance } from '../lib/bungieEquipped.js';
+import { buildStackedIconImage } from '../lib/armorImage.js';
 
 export const data = new SlashCommandBuilder()
   .setName('verity-appearances')
@@ -20,26 +21,21 @@ export async function execute(interaction) {
 
   const linkOrName = (item) => item.iconUrl ? `[${item.name}](${item.iconUrl})` : item.name;
 
-  // Discord only groups embeds into an image gallery when they share the same
-  // non-empty `url`, and stacking every item as its own embed shows each icon
-  // at full size instead of the single tiny thumbnail an embed normally allows.
-  const galleryUrl = (userId) => `https://verity-appearances.local/${userId}`;
-
   try {
-    const perUserEmbeds = await Promise.all(users.map(async (user) => {
+    const results = await Promise.all(users.map(async (user) => {
       const displayName = interaction.guild
         ? (await interaction.guild.members.fetch(user.id).catch(() => null))?.displayName ?? user.username
         : user.username;
 
       try {
         const a = await fetchEquippedAppearance(user.id);
-        const url = galleryUrl(user.id);
+        const order = [a.ghost, a.helmet, a.gauntlets, a.chest, a.legs, a.classItem];
+        const imageBuffer = await buildStackedIconImage(order);
 
-        const mainEmbed = new EmbedBuilder()
+        const embed = new EmbedBuilder()
           .setColor(0x9b59b6)
           .setTitle(displayName)
-          .setURL(url)
-          .setDescription('Order: Ghost, Helmet, Arms, Chest, Legs, Class Item')
+          .setDescription('Top to bottom: Ghost, Helmet, Arms, Chest, Legs, Class Item')
           .addFields(
             { name: 'Ghost',      value: linkOrName(a.ghost),     inline: true },
             { name: 'Helmet',     value: linkOrName(a.helmet),    inline: true },
@@ -49,14 +45,17 @@ export async function execute(interaction) {
             { name: 'Class Item', value: linkOrName(a.classItem), inline: true },
           );
 
-        const imageEmbeds = [a.ghost, a.helmet, a.gauntlets, a.chest, a.legs, a.classItem]
-          .filter(item => item.iconUrl)
-          .map(item => new EmbedBuilder().setURL(url).setImage(item.iconUrl));
+        let file = null;
+        if (imageBuffer) {
+          const filename = `armor-${user.id}.png`;
+          file = new AttachmentBuilder(imageBuffer, { name: filename });
+          embed.setImage(`attachment://${filename}`);
+        }
 
-        return [mainEmbed, ...imageEmbeds];
+        return { embed, file };
       } catch (err) {
-        return [
-          new EmbedBuilder()
+        return {
+          embed: new EmbedBuilder()
             .setColor(0x95a5a6)
             .setTitle(displayName)
             .setDescription(
@@ -64,15 +63,15 @@ export async function execute(interaction) {
                 ? 'Bungie account not linked — run `/link-account` to connect.'
                 : 'Could not fetch appearance data.'
             ),
-        ];
+          file: null,
+        };
       }
     }));
 
-    const [firstEmbeds, ...restEmbeds] = perUserEmbeds;
-    await interaction.editReply({ embeds: firstEmbeds });
-    for (const embeds of restEmbeds) {
-      await interaction.followUp({ embeds });
-    }
+    await interaction.editReply({
+      embeds: results.map(r => r.embed),
+      files: results.map(r => r.file).filter(Boolean),
+    });
   } catch (err) {
     console.error('[verity-appearances] Error:', err);
     await interaction.editReply({ content: 'Failed to fetch appearance data. Try again in a moment.' });
