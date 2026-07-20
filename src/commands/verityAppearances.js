@@ -20,18 +20,26 @@ export async function execute(interaction) {
 
   const linkOrName = (item) => item.iconUrl ? `[${item.name}](${item.iconUrl})` : item.name;
 
+  // Discord only groups embeds into an image gallery when they share the same
+  // non-empty `url`, and stacking every item as its own embed shows each icon
+  // at full size instead of the single tiny thumbnail an embed normally allows.
+  const galleryUrl = (userId) => `https://verity-appearances.local/${userId}`;
+
   try {
-    const embeds = await Promise.all(users.map(async (user) => {
+    const perUserEmbeds = await Promise.all(users.map(async (user) => {
       const displayName = interaction.guild
         ? (await interaction.guild.members.fetch(user.id).catch(() => null))?.displayName ?? user.username
         : user.username;
 
       try {
         const a = await fetchEquippedAppearance(user.id);
-        return new EmbedBuilder()
+        const url = galleryUrl(user.id);
+
+        const mainEmbed = new EmbedBuilder()
           .setColor(0x9b59b6)
           .setTitle(displayName)
-          .setThumbnail(a.ghost.iconUrl)
+          .setURL(url)
+          .setDescription('Order: Ghost, Helmet, Arms, Chest, Legs, Class Item')
           .addFields(
             { name: 'Ghost',      value: linkOrName(a.ghost),     inline: true },
             { name: 'Helmet',     value: linkOrName(a.helmet),    inline: true },
@@ -40,19 +48,31 @@ export async function execute(interaction) {
             { name: 'Legs',       value: linkOrName(a.legs),      inline: true },
             { name: 'Class Item', value: linkOrName(a.classItem), inline: true },
           );
+
+        const imageEmbeds = [a.ghost, a.helmet, a.gauntlets, a.chest, a.legs, a.classItem]
+          .filter(item => item.iconUrl)
+          .map(item => new EmbedBuilder().setURL(url).setImage(item.iconUrl));
+
+        return [mainEmbed, ...imageEmbeds];
       } catch (err) {
-        return new EmbedBuilder()
-          .setColor(0x95a5a6)
-          .setTitle(displayName)
-          .setDescription(
-            err.message === 'no-link'
-              ? 'Bungie account not linked — run `/link-account` to connect.'
-              : 'Could not fetch appearance data.'
-          );
+        return [
+          new EmbedBuilder()
+            .setColor(0x95a5a6)
+            .setTitle(displayName)
+            .setDescription(
+              err.message === 'no-link'
+                ? 'Bungie account not linked — run `/link-account` to connect.'
+                : 'Could not fetch appearance data.'
+            ),
+        ];
       }
     }));
 
-    await interaction.editReply({ embeds });
+    const [firstEmbeds, ...restEmbeds] = perUserEmbeds;
+    await interaction.editReply({ embeds: firstEmbeds });
+    for (const embeds of restEmbeds) {
+      await interaction.followUp({ embeds });
+    }
   } catch (err) {
     console.error('[verity-appearances] Error:', err);
     await interaction.editReply({ content: 'Failed to fetch appearance data. Try again in a moment.' });
