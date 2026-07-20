@@ -1,8 +1,21 @@
 import sharp from 'sharp';
+import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import { createRequire } from 'module';
 
-const ICON_SIZE = 128;
-const LABEL_HEIGHT = 36;
-const COLUMN_GAP = 12;
+const require = createRequire(import.meta.url);
+
+// Registered explicitly and bundled as a dependency because the label text is
+// drawn on a headless Linux deploy (Railway/Nixpacks) that has no system
+// fonts installed — relying on a default/system font left labels blank there.
+const FONT_FAMILY = 'Verity Label';
+GlobalFonts.registerFromPath(
+  require.resolve('dejavu-fonts-ttf/ttf/DejaVuSans-Bold.ttf'),
+  FONT_FAMILY
+);
+
+const ICON_SIZE = 192;
+const LABEL_HEIGHT = 48;
+const COLUMN_GAP = 16;
 const BG = { r: 35, g: 39, b: 42, alpha: 1 };
 
 async function fetchIconBuffer(url) {
@@ -11,23 +24,29 @@ async function fetchIconBuffer(url) {
   return Buffer.from(await res.arrayBuffer());
 }
 
-function escapeXml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 function labelTile(text) {
-  const safe = escapeXml(text.length > 16 ? `${text.slice(0, 15)}…` : text);
-  const svg = `
-    <svg width="${ICON_SIZE}" height="${LABEL_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#2c2f33"/>
-      <text x="50%" y="50%" fill="#ffffff" font-size="14" font-family="sans-serif"
-            text-anchor="middle" dominant-baseline="middle">${safe}</text>
-    </svg>`;
-  return Buffer.from(svg);
+  const canvas = createCanvas(ICON_SIZE, LABEL_HEIGHT);
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#2c2f33';
+  ctx.fillRect(0, 0, ICON_SIZE, LABEL_HEIGHT);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold 22px "${FONT_FAMILY}"`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const maxWidth = ICON_SIZE - 16;
+  let label = text;
+  if (ctx.measureText(label).width > maxWidth) {
+    while (label.length > 1 && ctx.measureText(`${label}…`).width > maxWidth) {
+      label = label.slice(0, -1);
+    }
+    label = `${label}…`;
+  }
+
+  ctx.fillText(label, ICON_SIZE / 2, LABEL_HEIGHT / 2 + 1);
+  return canvas.toBuffer('image/png');
 }
 
 function blankTile() {
