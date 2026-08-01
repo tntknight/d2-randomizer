@@ -5,12 +5,20 @@ import { postRaidResult } from '../lib/raidWatcher.js';
 
 export const data = new SlashCommandBuilder()
   .setName('raid-debug')
-  .setDescription('Fetch your most recent raid and post the results embed');
+  .setDescription('Fetch a recent raid and post the results embed')
+  .addIntegerOption(o => o
+    .setName('back')
+    .setDescription('How many raid reports back to look (1 = most recent, default 1)')
+    .setMinValue(1)
+    .setMaxValue(25)
+    .setRequired(false));
 
 export async function execute(interaction) {
   if (!isLinked(interaction.user.id)) {
     return interaction.reply({ content: 'Link your Bungie account first with `/link-account`.', ephemeral: true });
   }
+
+  const back = interaction.options.getInteger('back') ?? 1;
 
   await interaction.deferReply({ ephemeral: true });
 
@@ -20,12 +28,12 @@ export async function execute(interaction) {
 
   let activity = null;
   for (const charId of characterIds) {
-    const act = await getLatestActivityByMode(membershipType, membershipId, charId, 4);
+    const act = await getLatestActivityByMode(membershipType, membershipId, charId, 4, back - 1);
     if (act) { activity = act; break; }
   }
 
   if (!activity) {
-    return interaction.editReply({ content: 'No recent raid activity found.' });
+    return interaction.editReply({ content: `No raid activity found ${back} report(s) back.` });
   }
 
   const pgcr = await getPGCR(activity.activityDetails.instanceId);

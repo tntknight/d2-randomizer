@@ -20,10 +20,11 @@ export async function getMostRecentCharacterClass(membershipType, membershipId) 
   return chars[0].classType ?? null;
 }
 
-// Returns the most recent activity for one character filtered by mode, or null.
-export async function getLatestActivityByMode(membershipType, membershipId, characterId, mode) {
+// Returns the activity for one character filtered by mode, `offset` reports back
+// from the most recent (0 = most recent, 1 = the one before that, ...), or null.
+export async function getLatestActivityByMode(membershipType, membershipId, characterId, mode, offset = 0) {
   const res  = await fetch(
-    `${BASE}/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=1&page=0`,
+    `${BASE}/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=1&page=${offset}`,
     { headers: apiHeaders() }
   );
   const json = await res.json();
