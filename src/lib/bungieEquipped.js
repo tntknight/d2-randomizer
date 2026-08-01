@@ -13,6 +13,10 @@ const BUCKET = {
   classItem: 1585787867,
 };
 
+// Definitions are static game data, safe to cache for the life of the process.
+const itemDefCache = new Map();
+const socketTypeDefCache = new Map();
+
 async function bungieGet(path, accessToken) {
   const res = await fetch(`${BUNGIE_BASE}${path}`, {
     signal: AbortSignal.timeout(10_000),
@@ -44,17 +48,64 @@ async function getValidAccessToken(discordUserId) {
   return stored.accessToken;
 }
 
-async function getItemDef(hash, accessToken) {
-  if (!hash) return { name: 'Unknown', iconUrl: null };
-  const def = await bungieGet(
-    `/Destiny2/Manifest/DestinyInventoryItemDefinition/${hash}/`,
-    accessToken
-  );
-  const icon = def.displayProperties?.icon;
+async function getFullItemDef(hash, accessToken) {
+  if (itemDefCache.has(hash)) return itemDefCache.get(hash);
+  const def = await bungieGet(`/Destiny2/Manifest/DestinyInventoryItemDefinition/${hash}/`, accessToken);
+  itemDefCache.set(hash, def);
+  return def;
+}
+
+async function getSocketTypeDef(hash, accessToken) {
+  if (socketTypeDefCache.has(hash)) return socketTypeDefCache.get(hash);
+  const def = await bungieGet(`/Destiny2/Manifest/DestinySocketTypeDefinition/${hash}/`, accessToken);
+  socketTypeDefCache.set(hash, def);
+  return def;
+}
+
+function toAppearance(def) {
+  const icon = def?.displayProperties?.icon;
   return {
-    name:    def.displayProperties?.name ?? 'Unknown',
+    name:    def?.displayProperties?.name ?? 'Unknown',
     iconUrl: icon ? `${BUNGIE_CDN}${icon}` : null,
   };
+}
+
+async function getItemDef(hash, accessToken) {
+  if (!hash) return { name: 'Unknown', iconUrl: null };
+  return toAppearance(await getFullItemDef(hash, accessToken));
+}
+
+// Resolves what an equipped item actually looks like in-game, factoring in
+// any Ornament/transmog plugged into its skin socket — the base item's own
+// definition only reflects its un-transmogged appearance. Skin sockets are
+// identified by their plug whitelist's categoryIdentifier (e.g.
+// "armor_skins_hunter_head", "armor_skins_empty") rather than by the UI
+// "ARMOR COSMETICS" socket category, which also groups in the shader socket —
+// treating a shader change as a transmog would show the shader's swatch icon
+// instead of the armor's.
+async function getEquippedAppearance(itemHash, itemInstanceId, socketsByInstance, accessToken) {
+  if (!itemHash) return { name: 'Unknown', iconUrl: null };
+
+  const fullDef = await getFullItemDef(itemHash, accessToken);
+  const baseAppearance = toAppearance(fullDef);
+
+  const socketEntries = fullDef.sockets?.socketEntries ?? [];
+  const equippedSockets = socketsByInstance?.[itemInstanceId]?.sockets ?? [];
+
+  for (let i = 0; i < socketEntries.length; i++) {
+    const entry = socketEntries[i];
+    const typeDef = await getSocketTypeDef(entry.socketTypeHash, accessToken);
+    const isSkinSocket = (typeDef.plugWhitelist ?? []).some(p => /_skins/.test(p.categoryIdentifier ?? ''));
+    if (!isSkinSocket) continue;
+
+    const pluggedHash = equippedSockets[i]?.plugHash;
+    if (!pluggedHash || pluggedHash === entry.singleInitialItemHash) continue;
+
+    const ornamentAppearance = await getItemDef(pluggedHash, accessToken);
+    if (ornamentAppearance.iconUrl) return ornamentAppearance;
+  }
+
+  return baseAppearance;
 }
 
 export async function fetchEquippedAppearance(discordUserId) {
@@ -62,7 +113,7 @@ export async function fetchEquippedAppearance(discordUserId) {
   const { membershipType, membershipId } = getTokens(discordUserId);
 
   const profile = await bungieGet(
-    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,205`,
+    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,205,305`,
     accessToken
   );
 
@@ -74,20 +125,26 @@ export async function fetchEquippedAppearance(discordUserId) {
   if (!recentCharId) throw new Error('no-characters');
 
   const equipped = profile.characterEquipment?.data?.[recentCharId]?.items ?? [];
+  const socketsByInstance = profile.itemComponents?.sockets?.data ?? {};
 
-  // Map bucket hash -> item hash
+  // Map bucket hash -> equipped item
   const byBucket = {};
   for (const item of equipped) {
-    byBucket[item.bucketHash] = item.itemHash;
+    byBucket[item.bucketHash] = item;
   }
 
+  const resolve = (bucket) => {
+    const item = byBucket[bucket];
+    return getEquippedAppearance(item?.itemHash, item?.itemInstanceId, socketsByInstance, accessToken);
+  };
+
   const [ghost, helmet, gauntlets, chest, legs, classItem] = await Promise.all([
-    getItemDef(byBucket[BUCKET.ghost],     accessToken),
-    getItemDef(byBucket[BUCKET.helmet],    accessToken),
-    getItemDef(byBucket[BUCKET.gauntlets], accessToken),
-    getItemDef(byBucket[BUCKET.chest],     accessToken),
-    getItemDef(byBucket[BUCKET.legs],      accessToken),
-    getItemDef(byBucket[BUCKET.classItem], accessToken),
+    resolve(BUCKET.ghost),
+    resolve(BUCKET.helmet),
+    resolve(BUCKET.gauntlets),
+    resolve(BUCKET.chest),
+    resolve(BUCKET.legs),
+    resolve(BUCKET.classItem),
   ]);
 
   return { ghost, helmet, gauntlets, chest, legs, classItem };
