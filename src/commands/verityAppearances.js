@@ -31,6 +31,7 @@ export async function execute(interaction) {
         const items = [a.ghost, a.helmet, a.gauntlets, a.chest, a.legs, a.classItem];
         return { name: displayName, items, error: null };
       } catch (err) {
+        console.error(`[verity-appearances] fetch failed for ${user.id}:`, err);
         return {
           name: displayName,
           items: null,
