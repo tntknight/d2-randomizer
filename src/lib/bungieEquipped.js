@@ -94,7 +94,11 @@ async function getEquippedAppearance(itemHash, itemInstanceId, socketsByInstance
 
   for (let i = 0; i < socketEntries.length; i++) {
     const entry = socketEntries[i];
+    if (!entry.socketTypeHash) continue; // empty/unused socket slot — no definition to look up
+
     const typeDef = await getSocketTypeDef(entry.socketTypeHash, accessToken);
+    if (!typeDef) continue; // manifest has no definition for this hash
+
     const isSkinSocket = (typeDef.plugWhitelist ?? []).some(p => /_skins/.test(p.categoryIdentifier ?? ''));
     if (!isSkinSocket) continue;
 
