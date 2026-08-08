@@ -4,6 +4,7 @@ import { preloadManifest } from './lib/bungieManifest.js';
 import { startCallbackServer } from './server/callbackServer.js';
 import { MessageInteraction } from './lib/messageInteraction.js';
 import { pullExoticToInventory } from './lib/bungieInventory.js';
+import { initLobbyReanchor, handleLobbyChannelActivity } from './lib/lobbyReanchor.js';
 
 const PREFIX = '!';
 
@@ -80,6 +81,7 @@ commandModules.forEach(mod => {
 
 // Start the HTTP server immediately so Railway's health check passes on boot
 startCallbackServer();
+initLobbyReanchor(client);
 
 // ── Ready ─────────────────────────────────────────────────────────────────────
 client.once('ready', () => {
@@ -186,6 +188,15 @@ client.on('interactionCreate', async interaction => {
       await interaction.reply(msg).catch(() => {});
     }
   }
+});
+
+// ── Lobby reanchoring ─────────────────────────────────────────────────────────
+// Keeps raid/chaos-raid/dungeon/pvp-random lobby messages pinned to the bottom
+// of their channel by reposting them when other messages (including the bot's
+// own watcher output) push them up. Must see bot-authored messages too, so
+// this runs independently of the prefix-command listener below.
+client.on('messageCreate', message => {
+  handleLobbyChannelActivity(message);
 });
 
 // ── Prefix command handler ────────────────────────────────────────────────────
