@@ -5,6 +5,7 @@ import { startCallbackServer } from './server/callbackServer.js';
 import { MessageInteraction } from './lib/messageInteraction.js';
 import { pullExoticToInventory } from './lib/bungieInventory.js';
 import { initLobbyReanchor, handleLobbyChannelActivity } from './lib/lobbyReanchor.js';
+import { resumeLobbyWatchers } from './lib/resumeSessions.js';
 
 const PREFIX = '!';
 
@@ -96,6 +97,7 @@ client.once('ready', () => {
     activities: [{ name: '/link-account', type: 2 }],
     status: 'online',
   });
+  resumeLobbyWatchers(client).catch(err => console.error('[bot] Failed to resume lobby watchers:', err));
 });
 
 // ── Button handler ────────────────────────────────────────────────────────────

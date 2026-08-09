@@ -1,23 +1,14 @@
 import { RAIDS } from './raidData.js';
+import { createLobbyStore } from './persistentLobbyStore.js';
 
-const TTL_MS = 3 * 60 * 60 * 1000;
 export const MAX_PLAYERS = 6;
 
-const sessions = new Map();
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [guildId, session] of sessions) {
-    if (now - session.lastActivity > TTL_MS) {
-      sessions.delete(guildId);
-    }
-  }
-}, 10 * 60 * 1000);
+const store = createLobbyStore('guidedSessions.json');
 
 function create(guildId, hostId, channelId, raidId) {
   const raid = RAIDS.find(r => r.id === raidId);
   if (!raid) throw new Error(`Unknown raidId: ${raidId}`);
-  const session = {
+  return store.create(guildId, {
     guildId,
     hostId,
     lobbyChannelId: channelId,
@@ -27,24 +18,7 @@ function create(guildId, hostId, channelId, raidId) {
     raid,
     currentEncounterIndex: 0,
     lastActivity: Date.now(),
-  };
-  sessions.set(guildId, session);
-  return session;
+  });
 }
 
-function get(guildId) {
-  return sessions.get(guildId) ?? null;
-}
-
-function update(guildId, patch) {
-  const session = sessions.get(guildId);
-  if (!session) return null;
-  Object.assign(session, patch, { lastActivity: Date.now() });
-  return session;
-}
-
-function clear(guildId) {
-  sessions.delete(guildId);
-}
-
-export default { create, get, update, clear, MAX_PLAYERS };
+export default { create, get: store.get, update: store.update, clear: store.clear, all: store.all, MAX_PLAYERS };
