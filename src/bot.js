@@ -48,6 +48,10 @@ import * as pvpRandomStartCmd from './commands/pvpRandomStart.js';
 import * as pvpRandomStopCmd  from './commands/pvpRandomStop.js';
 import * as pvpRandomKickCmd  from './commands/pvpRandomKick.js';
 import { handlePvpRandomButton } from './lib/pvpRandomButtonHandler.js';
+import * as srlLobbyStartCmd  from './commands/srlLobbyStart.js';
+import * as srlLobbyStopCmd   from './commands/srlLobbyStop.js';
+import * as srlLobbyKickCmd   from './commands/srlLobbyKick.js';
+import { handleSrlLobbyButton } from './lib/srlLobbyButtonHandler.js';
 
 const commandModules = [
   addCmd, listCmd, loadoutCmd, clearCmd, dropCmd,
@@ -61,6 +65,7 @@ const commandModules = [
   helpCmd, rollClassCmd, raidWatchCmd, raidStopCmd, raidDebugCmd,
   raidStartCmd, verityAppearancesCmd, mapDebugCmd,
   pvpRandomStartCmd, pvpRandomStopCmd, pvpRandomKickCmd,
+  srlLobbyStartCmd, srlLobbyStopCmd, srlLobbyKickCmd,
 ];
 
 // ── Discord client ────────────────────────────────────────────────────────────
@@ -114,6 +119,11 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.customId.startsWith('pvpr:')) {
     await handlePvpRandomButton(interaction);
+    return;
+  }
+
+  if (interaction.customId.startsWith('srll:')) {
+    await handleSrlLobbyButton(interaction);
     return;
   }
 

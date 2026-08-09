@@ -5,7 +5,7 @@ const COLOR = 0x1a1d26;
 const PAGES = [
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Account & Weapons (1/6)')
+    .setTitle('D2 Randomizer — Account & Weapons (1/7)')
     .setDescription('All commands work as `/slash` or `!prefix`.')
     .addFields(
       {
@@ -29,7 +29,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Random Tools (2/6)')
+    .setTitle('D2 Randomizer — Random Tools (2/7)')
     .addFields(
       {
         name: '🎯 Random Rolls',
@@ -44,7 +44,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Activity Watchers (3/6)')
+    .setTitle('D2 Randomizer — Activity Watchers (3/7)')
     .setDescription('All watchers poll the Bungie API every 30 seconds. Requires a linked account. Resets on bot restart.')
     .addFields(
       {
@@ -57,7 +57,7 @@ const PAGES = [
       {
         name: '🏎️ Sparrow Racing',
         value: [
-          '`/srl-watch` — Watch for Sparrow Racing League private match results',
+          '`/srl-watch` — Watch for Sparrow Racing League match results (public or private)',
           '`/srl-stop` — Stop watching',
         ].join('\n'),
       },
@@ -73,7 +73,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Guided Raids (4/6)')
+    .setTitle('D2 Randomizer — Guided Raids (4/7)')
     .addFields(
       {
         name: '🗺️ Guided Raids',
@@ -95,7 +95,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — Chaos Activities (5/6)')
+    .setTitle('D2 Randomizer — Chaos Activities (5/7)')
     .setDescription('`/chaos-begin` and `/chaos-class` are shared between Chaos Raids and Chaos Dungeons.')
     .addFields(
       {
@@ -125,7 +125,7 @@ const PAGES = [
 
   new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('D2 Randomizer — PvP Random (6/6)')
+    .setTitle('D2 Randomizer — PvP Random (6/7)')
     .addFields(
       {
         name: '🔫 PvP Random',
@@ -143,6 +143,24 @@ const PAGES = [
       },
     )
     .setFooter({ text: 'Bungie account required for everyone in the lobby to Roll Loadout, and for the host to enable Rankings' }),
+
+  new EmbedBuilder()
+    .setColor(COLOR)
+    .setTitle('D2 Randomizer — SRL Lobby (7/7)')
+    .addFields(
+      {
+        name: '🏎️ SRL Lobby',
+        value: [
+          '`/srl-lobby` — Open a lobby (up to 6 players)',
+          '`/srl-lobby-kick <player>` — Remove a player from the lobby *(host only)*',
+          '`/srl-lobby-stop` — End the lobby *(host only)*',
+          '> Players **Join**/**Leave** anytime',
+          '> If the host is linked, the bot auto-watches their Sparrow Racing races (public playlist or private matches) and posts race results automatically',
+          '> Lobby members who finish in the race are scored and tracked on a 🏆 Rankings leaderboard — 1st place scores 6 points, 2nd 5, down to 6th at 1, accumulated across races',
+        ].join('\n'),
+      },
+    )
+    .setFooter({ text: 'Bungie account required for the host to enable Rankings' }),
 ];
 
 function buildRow(page, userId) {

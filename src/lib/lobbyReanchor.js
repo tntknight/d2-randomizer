@@ -1,6 +1,7 @@
 import guidedSession from './guidedSession.js';
 import chaosSession from './chaosSession.js';
 import pvpRandomSession from './pvpRandomSession.js';
+import srlLobbySession from './srlLobbySession.js';
 
 const REANCHOR_DELAY_MS = 4000;
 const RESCHEDULE_DELAY_MS = 2000;
@@ -10,6 +11,7 @@ const STORES = [
   { key: 'guided', store: guidedSession },
   { key: 'chaos',  store: chaosSession },
   { key: 'pvpr',   store: pvpRandomSession },
+  { key: 'srll',   store: srlLobbySession },
 ];
 
 const timers = new Map(); // "type:guildId" -> Timeout
