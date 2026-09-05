@@ -112,6 +112,22 @@ async function getEquippedAppearance(itemHash, itemInstanceId, socketsByInstance
   return baseAppearance;
 }
 
+// Returns the invoking player's current live fireteam roster via the Transitory
+// profile component (1000). Bungie documents this data as best-effort and
+// non-authoritative — it can lag or be wrong if a player just disconnected —
+// so callers should treat it as a helpful default, not a guarantee.
+export async function fetchPartyMembers(discordUserId) {
+  const accessToken = await getValidAccessToken(discordUserId);
+  const { membershipType, membershipId } = getTokens(discordUserId);
+
+  const profile = await bungieGet(
+    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=1000`,
+    accessToken
+  );
+
+  return profile.profileTransitoryData?.data?.partyMembers ?? [];
+}
+
 export async function fetchEquippedAppearance(discordUserId) {
   const accessToken = await getValidAccessToken(discordUserId);
   const { membershipType, membershipId } = getTokens(discordUserId);

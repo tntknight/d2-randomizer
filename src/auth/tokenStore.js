@@ -39,3 +39,12 @@ export function removeTokens(discordUserId) {
 export function isLinked(discordUserId) {
   return Boolean(load()[discordUserId]);
 }
+
+// Reverse lookup: given a Destiny membershipId, find the Discord user linked to it.
+export function findDiscordUserByMembershipId(membershipId) {
+  const data = load();
+  for (const [discordUserId, tokens] of Object.entries(data)) {
+    if (tokens.membershipId === membershipId) return discordUserId;
+  }
+  return null;
+}

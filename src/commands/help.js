@@ -88,7 +88,7 @@ const PAGES = [
       {
         name: '🔮 Raid Utilities',
         value: [
-          '`/verity-appearances [player1…6]` — Show each player\'s equipped ghost and armor for Verity statue identification',
+          '`/verity-appearances [player1…6]` — Auto-detects your live fireteam and shows each player\'s equipped ghost and armor for Verity statue identification (use player1-6 to add anyone it misses)',
         ].join('\n'),
       },
     ),
